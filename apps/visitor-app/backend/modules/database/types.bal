@@ -56,14 +56,15 @@ public type Visitor record {|
 
 # [Database] Insert record for visitor.
 public type AddVisitorPayload record {|
-    # Encrypted email hash of the visitor
+    # Hashed email or contact number of the visitor
     @constraint:String {
         pattern: {
-            value: NONE_EMPTY_PRINTABLE_STRING_REGEX,
-            message: "The email Hash should be a non-empty string with printable characters."
+            value: SHA256_REGEX,
+            message: "The Id Hash should be a valid SHA-256 hash."
         }
     }
-    string emailHash;
+    string idHash;
+
     # First name of the visitor
     @constraint:String {
         pattern: {
@@ -72,6 +73,7 @@ public type AddVisitorPayload record {|
         }
     }
     string? firstName = ();
+
     # Last name of the visitor
     @constraint:String {
         pattern: {
@@ -80,6 +82,7 @@ public type AddVisitorPayload record {|
         }
     }
     string? lastName = ();
+
     # Working phone number of visitor
     @constraint:String {
         pattern: {
@@ -88,6 +91,7 @@ public type AddVisitorPayload record {|
         }
     }
     string? contactNumber = ();
+
     # Email of the visitor
     @constraint:String {
         pattern: {
@@ -95,7 +99,7 @@ public type AddVisitorPayload record {|
             message: "The email should be a valid email address."
         }
     }
-    string email;
+    string? email = ();
 |};
 
 # [Database] Floor record.

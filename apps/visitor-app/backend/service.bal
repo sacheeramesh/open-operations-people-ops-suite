@@ -103,11 +103,11 @@ service http:InterceptableService / on new http:Listener(9090) {
         return userInfoResponse;
     }
 
-    # Fetches a specific visitor by hashed Email.
+    # Fetches a specific visitor by hashed email or hashed contact number.
     #
-    # + hashedEmail - Hashed Email of the visitor
+    # + idHash - Hashed email or Hashed contact number of the visitor
     # + return - Visitor or error
-    resource function get visitors/[string hashedEmail](http:RequestContext ctx)
+    resource function get visitors/[string idHash](http:RequestContext ctx)
         returns database:Visitor|http:InternalServerError|http:NotFound {
 
         authorization:CustomJwtPayload|error invokerInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
@@ -120,7 +120,7 @@ service http:InterceptableService / on new http:Listener(9090) {
             };
         }
 
-        database:Visitor|error? visitor = database:fetchVisitor(hashedEmail);
+        database:Visitor|error? visitor = database:fetchVisitor(idHash);
         if visitor is error {
             string customError = "Error occurred while fetching visitor!";
             log:printError(customError, visitor);
@@ -131,7 +131,7 @@ service http:InterceptableService / on new http:Listener(9090) {
             };
         }
         if visitor is () {
-            log:printError(string `No visitor information found for the hashed Email: ${hashedEmail}!`);
+            log:printError(string `No visitor information found for the hashed ID: ${idHash}!`);
             return <http:NotFound>{
                 body: {
                     message: "No visitor found!"
@@ -280,7 +280,7 @@ service http:InterceptableService / on new http:Listener(9090) {
 
         string? firstName = existingVisitor.firstName;
         string? lastName = existingVisitor.lastName;
-        string visitorEmail = existingVisitor.email;
+        string visitorEmail = existingVisitor.email ?: "";
         string? purposeOfVisit = payload.purposeOfVisit;
         string? whomTheyMeet = payload.whomTheyMeet;
         database:Floor[]? accessibleLocations = payload.accessibleLocations;
@@ -397,7 +397,7 @@ service http:InterceptableService / on new http:Listener(9090) {
                                                         contentType: "image/png"
                                                     }
                                                 ],
-                                                to: [existingVisitor.email],
+                                                to: [visitorEmail],
                                                 'from: email:fromEmailAddress,
                                                 subject: email:VISIT_INVITATION_SUBJECT,
                                                 template: content,

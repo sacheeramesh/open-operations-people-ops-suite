@@ -15,30 +15,12 @@
 // under the License.
 import ballerina/sql;
 
-# Add new visitor.
-#
-# + payload - Payload containing the visitor details  
-# + createdBy - Person who is creating the visitor
-# + return - Error if the insertion failed
-public isolated function addVisitor(AddVisitorPayload payload, string createdBy) returns error? {
-    string? firstName = payload.firstName;
-    string? lastName = payload.lastName;
-    string? contactNumber = payload.contactNumber;
-
-    payload.firstName = firstName is string ? check encrypt(firstName) : ();
-    payload.lastName = lastName is string ? check encrypt(lastName) : ();
-    payload.contactNumber = contactNumber is string ? check encrypt(contactNumber) : ();
-    payload.email = check encrypt(payload.email);
-
-    _ = check databaseClient->execute(addVisitorQuery(payload, createdBy));
-}
-
 # Fetch Visitor.
 #
-# + hashedEmail - Filter :  hashed email of the visitor
+# + idHash - Filter :  hashed email or hashed contact number of the visitor
 # + return - Visitor object or error if so
-public isolated function fetchVisitor(string hashedEmail) returns Visitor|error? {
-    Visitor|error visitor = databaseClient->queryRow(fetchVisitorByEmailQuery(hashedEmail));
+public isolated function fetchVisitor(string idHash) returns Visitor|error? {
+    Visitor|error visitor = databaseClient->queryRow(fetchVisitorByIdHashQuery(idHash));
     if visitor is error {
         return visitor is sql:NoRowsError ? () : visitor;
     }
@@ -46,6 +28,7 @@ public isolated function fetchVisitor(string hashedEmail) returns Visitor|error?
     string? first_name = visitor.firstName;
     string? last_name = visitor.lastName;
     string? contact_number = visitor.contactNumber;
+    string? email = visitor.email;
 
     if first_name is string {
         visitor.firstName = check decrypt(first_name);
@@ -57,9 +40,30 @@ public isolated function fetchVisitor(string hashedEmail) returns Visitor|error?
         visitor.contactNumber = check decrypt(contact_number);
     }
 
-    visitor.email = check decrypt(visitor.email);
+    if email is string {
+        visitor.email = check decrypt(email);
+    }
 
     return visitor;
+}
+
+# Add new visitor.
+#
+# + payload - Payload containing the visitor details  
+# + createdBy - Person who is creating the visitor
+# + return - Error if the insertion failed
+public isolated function addVisitor(AddVisitorPayload payload, string createdBy) returns error? {
+    string? firstName = payload.firstName;
+    string? lastName = payload.lastName;
+    string? contactNumber = payload.contactNumber;
+    string? email = payload.email;
+
+    payload.firstName = firstName is string ? check encrypt(firstName) : ();
+    payload.lastName = lastName is string ? check encrypt(lastName) : ();
+    payload.contactNumber = contactNumber is string ? check encrypt(contactNumber) : ();
+    payload.email = email is string ? check encrypt(email) : ();
+
+    _ = check databaseClient->execute(addVisitorQuery(payload, createdBy));
 }
 
 # Create a new invitation.

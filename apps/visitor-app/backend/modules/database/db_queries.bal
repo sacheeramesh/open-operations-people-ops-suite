@@ -16,6 +16,28 @@
 import ballerina/sql;
 import ballerina/time;
 
+# Build query to fetch a visitor by hashed email or hashed contact number.
+#
+# + idHash - Filter : Hashed email or hashed contact number of the visitor
+# + return - sql:ParameterizedQuery - Select query for the visitor based on the hashed email or hashed contact number
+isolated function fetchVisitorByIdHashQuery(string idHash) returns sql:ParameterizedQuery
+    => `
+        SELECT         
+            first_name as firstName,
+            last_name as lastName,
+            contact_number as contactNumber,
+            id_hash as idHash,
+            email,
+            created_by as createdBy,
+            created_on as createdOn,
+            updated_by as updatedBy,
+            updated_on as updatedOn
+        FROM 
+            visitor
+        WHERE 
+            id_hash = ${idHash};
+        `;
+
 # Build query to persist a visitor.
 #
 # + payload - Payload containing the visitor details
@@ -37,7 +59,7 @@ isolated function addVisitorQuery(AddVisitorPayload payload, string createdBy) r
         (
             ${payload.firstName},
             ${payload.lastName},
-            ${payload.emailHash},
+            ${payload.idHash},
             ${payload.email},
             ${payload.contactNumber},
             ${createdBy},
@@ -49,28 +71,6 @@ isolated function addVisitorQuery(AddVisitorPayload payload, string createdBy) r
             contact_number = COALESCE(${payload.contactNumber}, contact_number),
             updated_by = ${createdBy}
         ;`;
-
-# Build query to fetch a visitor by hashed email.
-#
-# + hashedEmail - Filter : Hashed email of the visitor
-# + return - sql:ParameterizedQuery - Select query for the visitor based on the hashed email
-isolated function fetchVisitorByEmailQuery(string hashedEmail) returns sql:ParameterizedQuery
-    => `
-        SELECT         
-            first_name as firstName,
-            last_name as lastName,
-            contact_number as contactNumber,
-            email_hash as emailHash,  
-            email,
-            created_by as createdBy,
-            created_on as createdOn,
-            updated_by as updatedBy,
-            updated_on as updatedOn
-        FROM 
-            visitor
-        WHERE 
-            email_hash = ${hashedEmail};
-        `;
 
 # Build query to create a new invitation.
 #
