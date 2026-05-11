@@ -16,7 +16,7 @@
 
 import type { NonIndexRouteObject } from "react-router-dom";
 
-import { ApplicationStatus } from "@config/constant";
+import { ApplicationStatus, Department, ExperienceLevel } from "@config/constant";
 
 // ── Navigation / Route ────────────────────────────────────────────────────────
 
@@ -106,11 +106,18 @@ export interface PortfolioItem {
 export interface Job {
   id: string;
   title: string;
-  team: string;
-  country: string[];
-  jobType: string;
-  publishStatus: string;
+  department: Department;
+  location: string;
+  experienceLevel: ExperienceLevel;
   postedDate: string;
+  description: string;
+  responsibilities: string[];
+  requirements: string[];
+  niceToHave: string[];
+  salaryRange: string;
+  teamSize: string;
+  isRemote: boolean;
+  requiredSkills: string[];
 }
 
 // ── Applications ───────────────────────────────────────────────────────────────
@@ -119,7 +126,7 @@ export interface Application {
   id: string;
   jobId: string;
   jobTitle: string;
-  department: string;
+  department: Department;
   appliedDate: string;
   status: ApplicationStatus;
   resumeVersionId: string;

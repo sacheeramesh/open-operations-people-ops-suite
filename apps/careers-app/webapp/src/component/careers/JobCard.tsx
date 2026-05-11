@@ -27,17 +27,14 @@ interface JobCardProps {
   onApply?: (job: Job) => void;
 }
 
-const teamColors: Record<string, string> = {
-  ENGINEERING: "#3B82F6",
-  "CUSTOMER SUCCESS": "#8B5CF6",
-  MARKETING: "#10B981",
-  SALES: "#EF4444",
-  "SALES ENGINEERING": "#F59E0B",
-  "People Operations": "#EC4899",
-  FINANCE: "#06B6D4",
-  "CHANNEL SALES": "#6366F1",
-  "DIGITAL TRANSFORMATION": "#14B8A6",
-  "BUSINESS OPERATIONS": "#F97316",
+const deptColors: Record<string, string> = {
+  Engineering: "#3B82F6",
+  Cloud: "#8B5CF6",
+  "Developer Relations": "#10B981",
+  Product: "#F59E0B",
+  Sales: "#EF4444",
+  "Human Resources": "#EC4899",
+  Marketing: "#06B6D4",
 };
 
 const JobCard = ({ job, onApply }: JobCardProps) => {
@@ -45,7 +42,7 @@ const JobCard = ({ job, onApply }: JobCardProps) => {
   const dispatch = useAppDispatch();
   const savedJobIds = useAppSelector((state: RootState) => state.careers.savedJobIds);
   const isSaved = savedJobIds.includes(job.id);
-  const color = teamColors[job.team] ?? "#6B7280";
+  const color = deptColors[job.department] ?? "#6B7280";
 
   const handleSave = (e: React.MouseEvent) => {
     e.stopPropagation();
@@ -74,7 +71,7 @@ const JobCard = ({ job, onApply }: JobCardProps) => {
         {/* Header */}
         <Stack direction="row" justifyContent="space-between" alignItems="flex-start" mb={1.5}>
           <Chip
-            label={job.team}
+            label={job.department}
             size="small"
             sx={{
               backgroundColor: `${color}15`,
@@ -113,13 +110,30 @@ const JobCard = ({ job, onApply }: JobCardProps) => {
           <Stack direction="row" alignItems="center" gap={0.75}>
             <MapPin size={13} color="#9CA3AF" />
             <Typography fontSize="13px" color="text.secondary">
-              {job.country.join(", ")}
+              {job.location}
+              {job.isRemote && (
+                <Box
+                  component="span"
+                  sx={{
+                    ml: 0.5,
+                    px: 0.75,
+                    py: 0.1,
+                    borderRadius: "4px",
+                    fontSize: "10px",
+                    backgroundColor: "#ECFDF5",
+                    color: "#10B981",
+                    fontWeight: 600,
+                  }}
+                >
+                  Remote
+                </Box>
+              )}
             </Typography>
           </Stack>
           <Stack direction="row" alignItems="center" gap={0.75}>
             <Briefcase size={13} color="#9CA3AF" />
             <Typography fontSize="13px" color="text.secondary">
-              {job.jobType}
+              {job.experienceLevel}
             </Typography>
           </Stack>
         </Stack>

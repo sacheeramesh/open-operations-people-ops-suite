@@ -19,8 +19,6 @@ import Toolbar from "@mui/material/Toolbar";
 
 import React from "react";
 
-import wso2LogoBlack from "@assets/images/wso2-logo_black.svg";
-import wso2LogoWhite from "@assets/images/wso2-logo_white.svg";
 import { APP_NAME } from "@config/config";
 import { useAppAuthContext } from "@context/AuthContext";
 import BasicBreadcrumbs from "@layout/BreadCrumbs/BreadCrumbs";
@@ -54,7 +52,11 @@ const Header = () => {
         <Stack direction="row" alignItems="center" gap={1.5} sx={{ cursor: "pointer" }} onClick={() => (window.location.href = "/")}>
           <Box
             component="img"
-            src={theme.palette.mode === "dark" ? wso2LogoWhite : wso2LogoBlack}
+            src={
+              theme.palette.mode === "dark"
+                ? "https://wso2.cachefly.net/wso2/sites/all/image_resources/logos/WSO2-Logo-White.png"
+                : "https://wso2.cachefly.net/wso2/sites/all/image_resources/logos/WSO2-Logo-Black.png"
+            }
             alt="WSO2"
             sx={{ height: 24, width: "auto", flexShrink: 0 }}
           />
@@ -67,7 +69,7 @@ const Header = () => {
               whiteSpace: "nowrap",
             }}
           >
-            {APP_NAME.replace("WSO2 ", "")}
+            {APP_NAME}
           </Typography>
         </Stack>
 

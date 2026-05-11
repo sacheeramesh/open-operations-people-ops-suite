@@ -46,7 +46,11 @@ const Dashboard = () => {
 
   const recentApplications = applications.slice(0, 3);
   const recommendedJobs = jobs
-    .filter((j) => !applications.find((a) => a.jobId === j.id))
+    .filter(
+      (j) =>
+        j.requiredSkills.some((s) => profile.skills.includes(s)) &&
+        !applications.find((a) => a.jobId === j.id),
+    )
     .slice(0, 3);
 
   const completionItems = [

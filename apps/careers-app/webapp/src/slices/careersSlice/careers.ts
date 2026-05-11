@@ -14,40 +14,24 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { PayloadAction, createAsyncThunk, createSlice } from "@reduxjs/toolkit";
+import { PayloadAction, createSlice } from "@reduxjs/toolkit";
 
 import { Application, CandidateProfile, Job } from "@/types/types";
-import { State } from "@/types/types";
-import { mockApplications, mockCandidateProfile, mockSavedJobIds } from "@utils/mockData";
-import { OrgStructure, fetchOrgStructure, fetchVacancies } from "@utils/vacancyService";
+import { mockApplications, mockCandidateProfile, mockJobs, mockSavedJobIds } from "@utils/mockData";
 
 interface CareersState {
   profile: CandidateProfile;
   jobs: Job[];
-  jobsState: State;
-  orgStructure: OrgStructure;
-  orgStructureState: State;
   applications: Application[];
   savedJobIds: string[];
 }
 
 const initialState: CareersState = {
   profile: mockCandidateProfile,
-  jobs: [],
-  jobsState: State.idle,
-  orgStructure: { locations: [], teams: [] },
-  orgStructureState: State.idle,
+  jobs: mockJobs,
   applications: mockApplications,
   savedJobIds: mockSavedJobIds,
 };
-
-export const loadJobs = createAsyncThunk("careers/loadJobs", async (accessToken: string) => {
-  return await fetchVacancies(accessToken);
-});
-
-export const loadOrgStructure = createAsyncThunk("careers/loadOrgStructure", async (accessToken: string) => {
-  return await fetchOrgStructure(accessToken);
-});
 
 export const CareersSlice = createSlice({
   name: "careers",
@@ -79,30 +63,6 @@ export const CareersSlice = createSlice({
     removeSkill: (state, action: PayloadAction<string>) => {
       state.profile.skills = state.profile.skills.filter((s) => s !== action.payload);
     },
-  },
-  extraReducers: (builder) => {
-    builder
-      .addCase(loadJobs.pending, (state) => {
-        state.jobsState = State.loading;
-      })
-      .addCase(loadJobs.fulfilled, (state, action) => {
-        state.jobs = action.payload;
-        state.jobsState = State.success;
-      })
-      .addCase(loadJobs.rejected, (state) => {
-        state.jobsState = State.failed;
-      })
-      .addCase(loadOrgStructure.pending, (state) => {
-        state.orgStructureState = State.loading;
-      })
-      .addCase(loadOrgStructure.fulfilled, (state, action) => {
-        state.orgStructure = action.payload;
-        state.orgStructureState = State.success;
-      })
-      .addCase(loadOrgStructure.rejected, (state) => {
-        state.orgStructureState = State.failed;
-        state.orgStructure = { locations: [], teams: [] };
-      });
   },
 });
 

@@ -14,82 +14,56 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import DOMPurify from "dompurify";
-
 import {
   Box,
   Button,
   Card,
   CardContent,
   Chip,
-  CircularProgress,
+  Divider,
   Grid,
+  LinearProgress,
   Stack,
   Typography,
 } from "@mui/material";
-import { ArrowLeft, Bookmark, BookmarkCheck, Briefcase, MapPin, Send } from "lucide-react";
-import { useEffect, useState } from "react";
+import { ArrowLeft, Bookmark, BookmarkCheck, Briefcase, DollarSign, MapPin, Send, Shield, Users } from "lucide-react";
+import { useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-
-import { useAuthContext } from "@asgardeo/auth-react";
 
 import ApplyModal from "@component/careers/ApplyModal";
 import { Job } from "@/types/types";
 import { toggleSaveJob } from "@slices/careersSlice/careers";
 import { RootState, useAppDispatch, useAppSelector } from "@slices/store";
-import { VacancyDetail, fetchVacancyDetail } from "@utils/vacancyService";
 
-const teamColors: Record<string, string> = {
-  ENGINEERING: "#3B82F6",
-  "CUSTOMER SUCCESS": "#8B5CF6",
-  MARKETING: "#10B981",
-  SALES: "#EF4444",
-  "SALES ENGINEERING": "#F59E0B",
-  "People Operations": "#EC4899",
-  FINANCE: "#06B6D4",
-  "CHANNEL SALES": "#6366F1",
-  "DIGITAL TRANSFORMATION": "#14B8A6",
-  "BUSINESS OPERATIONS": "#F97316",
+const deptColors: Record<string, string> = {
+  Engineering: "#3B82F6",
+  Cloud: "#8B5CF6",
+  "Developer Relations": "#10B981",
+  Product: "#F59E0B",
+  Sales: "#EF4444",
+  "Human Resources": "#EC4899",
+  Marketing: "#06B6D4",
 };
 
 const JobDetail = () => {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { getAccessToken } = useAuthContext();
 
+  const job = useAppSelector((state: RootState) =>
+    state.careers.jobs.find((j) => j.id === id),
+  );
   const savedJobIds = useAppSelector((state: RootState) => state.careers.savedJobIds);
+  const profile = useAppSelector((state: RootState) => state.careers.profile);
   const applications = useAppSelector((state: RootState) => state.careers.applications);
 
-  const [detail, setDetail] = useState<VacancyDetail | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(false);
   const [applyJob, setApplyJob] = useState<Job | null>(null);
 
-  useEffect(() => {
-    if (!id) return;
-    setLoading(true);
-    setError(false);
-    getAccessToken()
-      .then((token) => fetchVacancyDetail(id, token))
-      .then(setDetail)
-      .catch(() => setError(true))
-      .finally(() => setLoading(false));
-  }, [id, getAccessToken]);
-
-  if (loading) {
-    return (
-      <Box sx={{ display: "flex", justifyContent: "center", py: 8 }}>
-        <CircularProgress size={32} sx={{ color: "#FF7300" }} />
-      </Box>
-    );
-  }
-
-  if (error || !detail) {
+  if (!job) {
     return (
       <Box sx={{ textAlign: "center", py: 8 }}>
         <Typography variant="h5" mb={2} color="text.primary">
-          Failed to load job details.
+          Job not found
         </Typography>
         <Button variant="contained" onClick={() => navigate("/jobs")}>
           Back to Jobs
@@ -98,22 +72,17 @@ const JobDetail = () => {
     );
   }
 
-  const isSaved = savedJobIds.includes(detail.id);
-  const alreadyApplied = applications.some((a) => a.jobId === detail.id);
-  const color = teamColors[detail.team] ?? "#6B7280";
+  const isSaved = savedJobIds.includes(job.id);
+  const alreadyApplied = applications.some((a) => a.jobId === job.id);
+  const color = deptColors[job.department] ?? "#6B7280";
 
-  const jobForApply: Job = {
-    id: detail.id,
-    title: detail.title,
-    team: detail.team,
-    country: detail.country,
-    jobType: detail.jobType,
-    publishStatus: detail.publishStatus,
-    postedDate: detail.postedDate,
-  };
+  const matchingSkills = job.requiredSkills.filter((s) => profile.skills.includes(s));
+  const readinessScore = Math.round((matchingSkills.length / job.requiredSkills.length) * 100);
+  const missingSkills = job.requiredSkills.filter((s) => !profile.skills.includes(s));
 
   return (
     <Box>
+      {/* Back nav */}
       <Button
         startIcon={<ArrowLeft size={16} />}
         variant="text"
@@ -134,7 +103,7 @@ const JobDetail = () => {
           >
             <CardContent sx={{ p: 3 }}>
               <Chip
-                label={detail.team}
+                label={job.department}
                 size="small"
                 sx={{
                   mb: 1.5,
@@ -145,126 +114,158 @@ const JobDetail = () => {
                 }}
               />
               <Typography variant="h5" fontWeight={700} mb={2} color="text.primary">
-                {detail.title}
+                {job.title}
               </Typography>
               <Stack direction="row" gap={3} flexWrap="wrap">
                 <Stack direction="row" alignItems="center" gap={0.75}>
                   <MapPin size={14} color="#9CA3AF" />
                   <Typography fontSize="13px" color="text.secondary">
-                    {detail.country.join(", ")}
-                    {detail.allowRemote && (
-                      <Box
-                        component="span"
-                        sx={{
-                          ml: 0.75,
-                          px: 0.75,
-                          py: 0.1,
-                          borderRadius: "4px",
-                          fontSize: "10px",
-                          backgroundColor: "#ECFDF5",
-                          color: "#10B981",
-                          fontWeight: 600,
-                        }}
-                      >
-                        Remote
-                      </Box>
-                    )}
+                    {job.location}
+                    {job.isRemote && " · Remote"}
                   </Typography>
                 </Stack>
                 <Stack direction="row" alignItems="center" gap={0.75}>
                   <Briefcase size={14} color="#9CA3AF" />
                   <Typography fontSize="13px" color="text.secondary">
-                    {detail.jobType}
+                    {job.experienceLevel}
+                  </Typography>
+                </Stack>
+                <Stack direction="row" alignItems="center" gap={0.75}>
+                  <DollarSign size={14} color="#9CA3AF" />
+                  <Typography fontSize="13px" color="text.secondary">
+                    {job.salaryRange}
+                  </Typography>
+                </Stack>
+                <Stack direction="row" alignItems="center" gap={0.75}>
+                  <Users size={14} color="#9CA3AF" />
+                  <Typography fontSize="13px" color="text.secondary">
+                    Team: {job.teamSize}
                   </Typography>
                 </Stack>
               </Stack>
             </CardContent>
           </Card>
 
-          {/* Job Description */}
-          {detail.mainContent && (
-            <Card
-              elevation={0}
-              sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px", mb: 2 }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Box
-                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(detail.mainContent ?? "") }}
-                  sx={{
-                    fontSize: "14px",
-                    lineHeight: 1.8,
-                    color: "text.secondary",
-                    "& h1, & h2, & h3": { color: "text.primary", fontWeight: 700, mt: 2, mb: 1 },
-                    "& ul, & ol": { pl: 2.5 },
-                    "& li": { mb: 0.5 },
-                    "& p": { mb: 1.5 },
-                    "& strong": { color: "text.primary" },
-                  }}
-                />
-              </CardContent>
-            </Card>
-          )}
+          {/* Description */}
+          <Card
+            elevation={0}
+            sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px", mb: 2 }}
+          >
+            <CardContent sx={{ p: 3 }}>
+              <Typography fontWeight={700} mb={1.5}>
+                About the Role
+              </Typography>
+              <Typography color="text.secondary" lineHeight={1.8} fontSize="14px" mb={3}>
+                {job.description}
+              </Typography>
 
-          {/* Task Information */}
-          {detail.taskInformation && (
-            <Card
-              elevation={0}
-              sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px", mb: 2 }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Box
-                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(detail.taskInformation ?? "") }}
-                  sx={{
-                    fontSize: "14px",
-                    lineHeight: 1.8,
-                    color: "text.secondary",
-                    "& h1, & h2, & h3": { color: "text.primary", fontWeight: 700, mt: 2, mb: 1 },
-                    "& ul, & ol": { pl: 2.5 },
-                    "& li": { mb: 0.5 },
-                    "& p": { mb: 1.5 },
-                    "& strong": { color: "text.primary" },
-                  }}
-                />
-              </CardContent>
-            </Card>
-          )}
+              <Divider sx={{ mb: 2.5 }} />
 
-          {/* Additional Content */}
-          {detail.additionalContent && (
-            <Card
-              elevation={0}
-              sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px", mb: 2 }}
-            >
-              <CardContent sx={{ p: 3 }}>
-                <Box
-                  dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(detail.additionalContent ?? "") }}
-                  sx={{
-                    fontSize: "14px",
-                    lineHeight: 1.8,
-                    color: "text.secondary",
-                    "& h1, & h2, & h3": { color: "text.primary", fontWeight: 700, mt: 2, mb: 1 },
-                    "& ul, & ol": { pl: 2.5 },
-                    "& li": { mb: 0.5 },
-                    "& p": { mb: 1.5 },
-                    "& strong": { color: "text.primary" },
-                  }}
-                />
-              </CardContent>
-            </Card>
-          )}
+              <Typography fontWeight={700} mb={1.5}>
+                Responsibilities
+              </Typography>
+              <Stack component="ul" gap={1} sx={{ pl: 2, m: 0, mb: 3 }}>
+                {job.responsibilities.map((item, i) => (
+                  <Typography component="li" key={i} fontSize="14px" color="text.secondary" lineHeight={1.7}>
+                    {item}
+                  </Typography>
+                ))}
+              </Stack>
+
+              <Divider sx={{ mb: 2.5 }} />
+
+              <Typography fontWeight={700} mb={1.5}>
+                Requirements
+              </Typography>
+              <Stack component="ul" gap={1} sx={{ pl: 2, m: 0, mb: 3 }}>
+                {job.requirements.map((item, i) => (
+                  <Typography component="li" key={i} fontSize="14px" color="text.secondary" lineHeight={1.7}>
+                    {item}
+                  </Typography>
+                ))}
+              </Stack>
+
+              {job.niceToHave.length > 0 && (
+                <>
+                  <Divider sx={{ mb: 2.5 }} />
+                  <Typography fontWeight={700} mb={1.5}>
+                    Nice to Have
+                  </Typography>
+                  <Stack component="ul" gap={1} sx={{ pl: 2, m: 0 }}>
+                    {job.niceToHave.map((item, i) => (
+                      <Typography component="li" key={i} fontSize="14px" color="text.secondary" lineHeight={1.7}>
+                        {item}
+                      </Typography>
+                    ))}
+                  </Stack>
+                </>
+              )}
+            </CardContent>
+          </Card>
         </Grid>
 
         {/* Sidebar */}
         <Grid size={{ xs: 12, md: 4 }}>
+          {/* Profile Readiness */}
           <Card
             elevation={0}
-            sx={{
-              border: "1px solid",
-              borderColor: "divider",
-              borderRadius: "12px",
-              position: "sticky",
-              top: 16,
-            }}
+            sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px", mb: 2 }}
+          >
+            <CardContent sx={{ p: 2.5 }}>
+              <Stack direction="row" alignItems="center" gap={1} mb={1.5}>
+                <Shield size={16} color="#FF7300" />
+                <Typography fontWeight={700} fontSize="14px">
+                  Passport Readiness
+                </Typography>
+              </Stack>
+
+              <Typography fontSize="13px" color="text.secondary" mb={1}>
+                Your profile is{" "}
+                <Box component="span" sx={{ fontWeight: 700, color: readinessScore >= 70 ? "#10B981" : "#F59E0B" }}>
+                  {readinessScore}% ready
+                </Box>{" "}
+                for this job
+              </Typography>
+
+              <LinearProgress
+                variant="determinate"
+                value={readinessScore}
+                sx={{
+                  mb: 2,
+                  height: 6,
+                  borderRadius: 3,
+                  backgroundColor: "action.hover",
+                  "& .MuiLinearProgress-bar": {
+                    borderRadius: 3,
+                    backgroundColor: readinessScore >= 70 ? "#10B981" : "#F59E0B",
+                  },
+                }}
+              />
+
+              {missingSkills.length > 0 && (
+                <Box>
+                  <Typography fontSize="12px" color="text.secondary" mb={1}>
+                    Missing skills:
+                  </Typography>
+                  <Stack direction="row" gap={0.75} flexWrap="wrap">
+                    {missingSkills.map((s) => (
+                      <Chip
+                        key={s}
+                        label={s}
+                        size="small"
+                        sx={{ fontSize: "11px", backgroundColor: "#FEF2F2", color: "#EF4444" }}
+                      />
+                    ))}
+                  </Stack>
+                </Box>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* Apply Card */}
+          <Card
+            elevation={0}
+            sx={{ border: "1px solid", borderColor: "divider", borderRadius: "12px", position: "sticky", top: 16 }}
           >
             <CardContent sx={{ p: 2.5 }}>
               <Stack gap={1.5}>
@@ -286,7 +287,7 @@ const JobDetail = () => {
                     variant="contained"
                     fullWidth
                     startIcon={<Send size={15} />}
-                    onClick={() => setApplyJob(jobForApply)}
+                    onClick={() => setApplyJob(job)}
                     sx={{ borderRadius: "8px", fontWeight: 700, py: 1.25 }}
                   >
                     Apply with Candidate Passport
@@ -296,7 +297,7 @@ const JobDetail = () => {
                   variant="outlined"
                   fullWidth
                   startIcon={isSaved ? <BookmarkCheck size={15} /> : <Bookmark size={15} />}
-                  onClick={() => dispatch(toggleSaveJob(detail.id))}
+                  onClick={() => dispatch(toggleSaveJob(job.id))}
                   sx={{
                     borderRadius: "8px",
                     fontWeight: 600,

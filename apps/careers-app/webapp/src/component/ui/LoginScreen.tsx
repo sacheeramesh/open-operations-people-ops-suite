@@ -28,6 +28,7 @@ import {
   useTheme,
 } from "@mui/material";
 import {
+  BookOpen,
   Briefcase,
   CheckCircle,
   Globe,
@@ -37,8 +38,6 @@ import {
   Zap,
 } from "lucide-react";
 
-import wso2LogoBlack from "@assets/images/wso2-logo_black.svg";
-import wso2LogoWhite from "@assets/images/wso2-logo_white.svg";
 import { mockJobs } from "@utils/mockData";
 import { useAppAuthContext } from "@context/AuthContext";
 
@@ -49,13 +48,13 @@ const LoginScreen = () => {
   const featuredJobs = mockJobs.slice(0, 3);
 
   const deptColors: Record<string, string> = {
-    ENGINEERING: "#3B82F6",
-    "CUSTOMER SUCCESS": "#8B5CF6",
-    MARKETING: "#10B981",
-    SALES: "#EF4444",
-    "SALES ENGINEERING": "#F59E0B",
-    "People Operations": "#EC4899",
-    FINANCE: "#06B6D4",
+    Engineering: "#3B82F6",
+    Cloud: "#8B5CF6",
+    "Developer Relations": "#10B981",
+    Product: "#F59E0B",
+    Sales: "#EF4444",
+    "Human Resources": "#EC4899",
+    Marketing: "#06B6D4",
   };
 
   return (
@@ -81,12 +80,14 @@ const LoginScreen = () => {
         }}
       >
         <Container maxWidth="lg">
-          <Stack direction="row" alignItems="center" py={1.5}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" py={1.5}>
             <Stack direction="row" alignItems="center" gap={1.5}>
               <Box
                 component="img"
                 src={
-                  theme.palette.mode === "dark" ? wso2LogoWhite : wso2LogoBlack
+                  theme.palette.mode === "dark"
+                    ? "https://wso2.cachefly.net/wso2/sites/all/image_resources/logos/WSO2-Logo-White.png"
+                    : "https://wso2.cachefly.net/wso2/sites/all/image_resources/logos/WSO2-Logo-Black.png"
                 }
                 alt="WSO2"
                 sx={{ height: 28, width: "auto" }}
@@ -95,13 +96,24 @@ const LoginScreen = () => {
                 <Typography
                   sx={{ fontWeight: 700, fontSize: "16px", lineHeight: 1, color: "text.primary" }}
                 >
-                  Careers
+                  WSO2 Careers
                 </Typography>
                 <Typography sx={{ fontSize: "11px", color: "text.secondary" }}>
                   Candidate Passport Platform
                 </Typography>
               </Box>
             </Stack>
+            <LoadingButton
+              variant="contained"
+              size="small"
+              onClick={() => {
+                appSignOut();
+                appSignIn();
+              }}
+              sx={{ fontWeight: 600, borderRadius: "8px", px: 2.5 }}
+            >
+              Sign in with Asgardeo
+            </LoadingButton>
           </Stack>
         </Container>
       </Box>
@@ -168,7 +180,7 @@ const LoginScreen = () => {
                 }}
                 sx={{ fontWeight: 600, borderRadius: "10px", px: 4, py: 1.5 }}
               >
-                Sign In
+                Explore Jobs ({mockJobs.length})
               </LoadingButton>
             </Stack>
 
@@ -217,27 +229,40 @@ const LoginScreen = () => {
                   </Box>
                   <Box>
                     <Typography fontWeight={700} fontSize="15px">
-                      Your Candidate Passport
+                      Candidate Passport
                     </Typography>
                     <Typography fontSize="12px" color="text.secondary">
-                      One profile. Every WSO2 application.
+                      Your persistent professional identity
                     </Typography>
                   </Box>
+                  <Chip
+                    label="70% complete"
+                    size="small"
+                    sx={{ ml: "auto", backgroundColor: "#FF730020", color: "#FF7300", fontWeight: 600 }}
+                  />
                 </Stack>
 
                 <Divider sx={{ mb: 2 }} />
 
                 <Stack gap={1.5}>
                   {[
-                    { icon: <CheckCircle size={14} />, label: "Build your profile once, reuse everywhere" },
-                    { icon: <CheckCircle size={14} />, label: "Add skills, experience & portfolio" },
-                    { icon: <CheckCircle size={14} />, label: "Upload your resume — no repeats" },
-                    { icon: <CheckCircle size={14} />, label: "Track all your applications in one place" },
-                    { icon: <CheckCircle size={14} />, label: "Apply to any role instantly" },
+                    { icon: <CheckCircle size={14} />, label: "Basic Info", done: true },
+                    { icon: <CheckCircle size={14} />, label: "5 Skills added", done: true },
+                    { icon: <CheckCircle size={14} />, label: "Resume uploaded", done: true },
+                    { icon: <BookOpen size={14} />, label: "Work Experience missing", done: false },
+                    { icon: <Globe size={14} />, label: "Portfolio not added", done: false },
                   ].map((item, i) => (
                     <Stack key={i} direction="row" alignItems="center" gap={1.5}>
-                      <Box sx={{ color: "#10B981" }}>{item.icon}</Box>
-                      <Typography fontSize="13px" color="text.primary">
+                      <Box sx={{ color: item.done ? "#10B981" : theme.palette.text.disabled }}>
+                        {item.icon}
+                      </Box>
+                      <Typography
+                        fontSize="13px"
+                        sx={{
+                          color: item.done ? "text.primary" : "text.disabled",
+                          textDecoration: item.done ? "none" : "none",
+                        }}
+                      >
                         {item.label}
                       </Typography>
                     </Stack>
@@ -257,7 +282,7 @@ const LoginScreen = () => {
                   <Stack direction="row" alignItems="center" gap={1}>
                     <Zap size={14} color="#FF7300" />
                     <Typography fontSize="12px" color="#FF7300" fontWeight={600}>
-                      Sign in or create a profile to get started
+                      Apply to any job instantly with your Passport
                     </Typography>
                   </Stack>
                 </Box>
@@ -303,12 +328,12 @@ const LoginScreen = () => {
                 >
                   <CardContent sx={{ p: 2.5 }}>
                     <Chip
-                      label={job.team}
+                      label={job.department}
                       size="small"
                       sx={{
                         mb: 1.5,
-                        backgroundColor: `${deptColors[job.team] ?? "#6B7280"}20`,
-                        color: deptColors[job.team] ?? "#6B7280",
+                        backgroundColor: `${deptColors[job.department] ?? "#6B7280"}20`,
+                        color: deptColors[job.department] ?? "#6B7280",
                         fontWeight: 600,
                         fontSize: "11px",
                       }}
@@ -319,13 +344,13 @@ const LoginScreen = () => {
                     <Stack direction="row" alignItems="center" gap={0.5} mb={0.5}>
                       <MapPin size={12} color={theme.palette.text.secondary} />
                       <Typography fontSize="12px" color="text.secondary">
-                        {job.country.join(", ")}
+                        {job.location}
                       </Typography>
                     </Stack>
                     <Stack direction="row" alignItems="center" gap={0.5}>
                       <Briefcase size={12} color={theme.palette.text.secondary} />
                       <Typography fontSize="12px" color="text.secondary">
-                        {job.jobType}
+                        {job.experienceLevel}
                       </Typography>
                     </Stack>
                   </CardContent>
@@ -350,7 +375,9 @@ const LoginScreen = () => {
             <Box
               component="img"
               src={
-                theme.palette.mode === "dark" ? wso2LogoWhite : wso2LogoBlack
+                theme.palette.mode === "dark"
+                  ? "https://wso2.cachefly.net/wso2/sites/all/image_resources/logos/WSO2-Logo-White.png"
+                  : "https://wso2.cachefly.net/wso2/sites/all/image_resources/logos/WSO2-Logo-Black.png"
               }
               alt="WSO2"
               sx={{ height: 20, width: "auto", opacity: 0.7 }}

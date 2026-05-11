@@ -68,7 +68,7 @@ const ApplyModal = ({ job, open, onClose }: ApplyModalProps) => {
       id: `a-${Date.now()}`,
       jobId: job.id,
       jobTitle: job.title,
-      department: job.team,
+      department: job.department,
       appliedDate: new Date().toISOString().split("T")[0],
       status: ApplicationStatus.Applied,
       resumeVersionId: selectedResumeId,
@@ -107,7 +107,7 @@ const ApplyModal = ({ job, open, onClose }: ApplyModalProps) => {
               </Typography>
             </Stack>
             <Typography fontSize="13px" color="text.secondary">
-              {job.title} · {job.team}
+              {job.title} · {job.department}
             </Typography>
           </Box>
           <IconButton size="small" onClick={onClose}>
