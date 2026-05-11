@@ -14,47 +14,48 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import Grid from "@mui/material/Grid";
-import { Container, Box } from "@mui/material";
-import StateWithImage from "@component/ui/StateWithImage";
+import { Box, Button, Container, Typography } from "@mui/material";
+import { AlertTriangle } from "lucide-react";
 
-interface ErrorHandlerProps {
-  message: string | null;
-}
+import type { ErrorHandlerProps } from "@utils/types";
 
 const ErrorHandler = (props: ErrorHandlerProps) => {
   return (
     <Box
       sx={{
-        paddingX: 2,
-        paddingY: 5,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100vh",
+        gap: 3,
       }}
     >
-      <Container maxWidth="md">
-        <Grid
-          container
-          direction="column"
-          justifyContent="center"
-          alignItems="center"
-          gap={2}
+      <Container maxWidth="sm">
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            gap: 2,
+            textAlign: "center",
+          }}
         >
-          <Grid item xs={12}>
-            <img
-              alt="logo"
-              width="150"
-              height="auto"
-              src={require("@assets/images/wso2-logo.svg").default}
-            />
-          </Grid>
-          <Grid item xs={12}>
-            <StateWithImage
-              message={
-                props.message || "Something went wrong! Please try again later."
-              }
-              imageUrl={require("@assets/images/not-found.svg").default}
-            />
-          </Grid>
-        </Grid>
+          <AlertTriangle size={48} color="#FF7300" />
+          <Typography variant="h5" fontWeight={600}>
+            Something went wrong
+          </Typography>
+          <Typography variant="body1" color="text.secondary">
+            {props.message || "An unexpected error occurred. Please try again later."}
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => window.location.reload()}
+            sx={{ mt: 1 }}
+          >
+            Reload Page
+          </Button>
+        </Box>
       </Container>
     </Box>
   );

@@ -14,34 +14,36 @@
 // specific language governing permissions and limitations
 // under the License.
 
+import { Navigate, RouterProvider, createBrowserRouter } from "react-router-dom";
+
+import { useMemo } from "react";
+
 import Layout from "@layout/Layout";
 import NotFoundPage from "@layout/pages/404";
-import PreLoader from "@component/common/PreLoader";
-import { getActiveRoutesV2, routes } from "@src/route";
-import MaintenancePage from "@layout/pages/Maintenance";
 import { RootState, useAppSelector } from "@slices/store";
-import ErrorHandler from "@component/common/ErrorHandler";
-import { RouterProvider, createBrowserRouter } from "react-router-dom";
+
+import { getActiveRoutesV2, routes } from "../route";
 
 const AppHandler = () => {
   const auth = useAppSelector((state: RootState) => state.auth);
-  const router = createBrowserRouter([
-    {
-      path: "/",
-      element: <Layout />,
-      errorElement: <NotFoundPage />,
-      children: getActiveRoutesV2(routes, auth.roles),
-    },
-  ]);
 
-  return (
-    <>
-      {auth.status === "loading" && <PreLoader isLoading={true} message={auth.statusMessage} />}
-      {auth.status === "success" && auth.mode === "active" && <RouterProvider router={router} />}
-      {auth.status === "success" && auth.mode === "maintenance" && <MaintenancePage />}
-      {auth.status === "failed" && <ErrorHandler message={auth.statusMessage} />}
-    </>
+  const router = useMemo(
+    () =>
+      createBrowserRouter([
+        {
+          path: "/",
+          element: <Layout />,
+          errorElement: <NotFoundPage />,
+          children: [
+            { index: true, element: <Navigate to="/dashboard" replace /> },
+            ...getActiveRoutesV2(routes, auth.roles),
+          ],
+        },
+      ]),
+    [auth.roles],
   );
+
+  return <RouterProvider router={router} />;
 };
 
 export default AppHandler;

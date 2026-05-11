@@ -12,84 +12,85 @@
 // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
-// under the License. 
+// under the License.
+
+import {
+  AssignmentOutlined,
+  BookmarkBorderOutlined,
+  DashboardOutlined,
+  HelpOutlineOutlined,
+  PersonOutlined,
+  WorkOutlineOutlined,
+} from "@mui/icons-material";
+import type { RouteObject } from "react-router-dom";
 
 import React from "react";
-import { View } from "@view/index";
+
 import { Role } from "@slices/authSlice/auth";
-import PersonIcon from '@mui/icons-material/Person';
+import type { RouteDetail, RouteObjectWithRole } from "@/types/types";
 import { isIncludedRole } from "@utils/utils";
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import HomeIcon from '@mui/icons-material/Home';
-import WorkIcon from '@mui/icons-material/Work';
-import { RouteObject, NonIndexRouteObject } from "react-router-dom";
-
-export interface RouteObjectWithRole extends NonIndexRouteObject {
-  allowRoles: string[];
-  icon:
-  | React.ReactElement<any, string | React.JSXElementConstructor<any>>
-  | undefined;
-  text: string;
-  children?: RouteObjectWithRole[];
-  bottomNav?: boolean;
-  hideInSidebar?: boolean;
-}
-
-interface RouteDetail {
-  path: string;
-  allowRoles: string[];
-  icon:
-  | React.ReactElement<any, string | React.JSXElementConstructor<any>>
-  | undefined;
-  text: string;
-  bottomNav?: boolean;
-}
+import { View } from "@view/index";
 
 export const routes: RouteObjectWithRole[] = [
   {
-    path: "/",
-    text: "Home",
-    icon: React.createElement(HomeIcon),
-    element: React.createElement(View.home),
-    allowRoles: [Role.ADMIN, Role.TEAM],
-  },
-    {
-    path: "/vacancies",
-    text: "Vacancies",
-    icon: React.createElement(WorkIcon),
-    element: React.createElement(View.vacancies),
-    allowRoles: [Role.ADMIN, Role.TEAM],
-  },
-  {
-    path: "/vacancies/:id",
-    text: "Vacancy Detail",
-    icon: React.createElement(WorkIcon),
-    element: React.createElement(View.vacancyDetail),
-    allowRoles: [Role.ADMIN, Role.TEAM],
-    hideInSidebar: true,
+    path: "/dashboard",
+    text: "Dashboard",
+    icon: React.createElement(DashboardOutlined, { sx: { fontSize: 20 } }),
+    element: React.createElement(View.dashboard),
+    allowRoles: [Role.CANDIDATE, Role.ADMIN],
   },
   {
     path: "/profile",
-    text: "Profile",
-    icon: React.createElement(PersonIcon),
-    element: React.createElement(View.applicants),
-    allowRoles: [Role.ADMIN, Role.TEAM],
+    text: "My Profile",
+    icon: React.createElement(PersonOutlined, { sx: { fontSize: 20 } }),
+    element: React.createElement(View.profile),
+    allowRoles: [Role.CANDIDATE, Role.ADMIN],
+  },
+  {
+    path: "/jobs",
+    text: "Browse Jobs",
+    icon: React.createElement(WorkOutlineOutlined, { sx: { fontSize: 20 } }),
+    element: React.createElement(View.jobs),
+    allowRoles: [Role.CANDIDATE, Role.ADMIN],
+  },
+  {
+    path: "/jobs/:id",
+    text: "Job Detail",
+    icon: React.createElement(WorkOutlineOutlined, { sx: { fontSize: 20 } }),
+    element: React.createElement(View.jobDetail),
+    allowRoles: [Role.CANDIDATE, Role.ADMIN],
+    bottomNav: true,
+  },
+  {
+    path: "/applications",
+    text: "My Applications",
+    icon: React.createElement(AssignmentOutlined, { sx: { fontSize: 20 } }),
+    element: React.createElement(View.applications),
+    allowRoles: [Role.CANDIDATE, Role.ADMIN],
+  },
+  {
+    path: "/saved",
+    text: "Saved Jobs",
+    icon: React.createElement(BookmarkBorderOutlined, { sx: { fontSize: 20 } }),
+    element: React.createElement(View.savedJobs),
+    allowRoles: [Role.CANDIDATE, Role.ADMIN],
   },
   {
     path: "/help",
     text: "Help",
-    icon: React.createElement(HelpOutlineIcon),
+    icon: React.createElement(HelpOutlineOutlined, { sx: { fontSize: 20 } }),
     element: React.createElement(View.help),
-    allowRoles: [Role.ADMIN, Role.TEAM],
+    allowRoles: [Role.CANDIDATE, Role.ADMIN],
     bottomNav: true,
   },
 ];
+
 export const getActiveRoutesV2 = (
   routes: RouteObjectWithRole[] | undefined,
-  roles: string[]
+  roles: string[],
 ): RouteObjectWithRole[] => {
   if (!routes) return [];
-  var routesObj: RouteObjectWithRole[] = [];
+  const routesObj: RouteObjectWithRole[] = [];
   routes.forEach((routeObj) => {
     if (isIncludedRole(roles, routeObj.allowRoles)) {
       routesObj.push({
@@ -98,29 +99,26 @@ export const getActiveRoutesV2 = (
       });
     }
   });
-
   return routesObj;
 };
 
 export const getActiveRoutes = (roles: string[]): RouteObject[] => {
-  var routesObj: RouteObject[] = [];
+  const routesObj: RouteObject[] = [];
   routes.forEach((routeObj) => {
     if (isIncludedRole(roles, routeObj.allowRoles)) {
-      routesObj.push({
-        ...routeObj,
-      });
+      routesObj.push({ ...routeObj });
     }
   });
   return routesObj;
 };
 
 export const getActiveRouteDetails = (roles: string[]): RouteDetail[] => {
-  var routesObj: RouteDetail[] = [];
+  const routesObj: RouteDetail[] = [];
   routes.forEach((routeObj) => {
-    if (isIncludedRole(roles, routeObj.allowRoles) && !routeObj.hideInSidebar) {
+    if (routeObj.path && isIncludedRole(roles, routeObj.allowRoles)) {
       routesObj.push({
-        path: routeObj.path ? routeObj.path : "",
         ...routeObj,
+        path: routeObj.path ?? "",
       });
     }
   });

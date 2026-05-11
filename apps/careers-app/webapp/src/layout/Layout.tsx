@@ -14,33 +14,32 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import Header from "@layout/header";
-import Sidebar from "@layout/sidebar";
-import pJson from "@root/package.json";
+import { Box, useTheme } from "@mui/material";
 import { useSnackbar } from "notistack";
 import { useSelector } from "react-redux";
-import { Typography } from "@mui/material";
-import { Box, alpha } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
-import CssBaseline from "@mui/material/CssBaseline";
-import { selectRoles } from "@slices/authSlice/auth";
-import { RootState, useAppSelector } from "@slices/store";
-import { Suspense, useEffect, useState, useCallback } from "react";
 import { Outlet, useLocation, useNavigate } from "react-router-dom";
+
+import { Suspense, useCallback, useEffect, useState } from "react";
+
+import PreLoader from "@component/common/PreLoader";
+import { redirectUrl as savedRedirectUrl } from "@config/constant";
 import ConfirmationModalContextProvider from "@context/DialogContext";
+import Header from "@layout/header";
+import Sidebar from "@layout/sidebar";
+import { selectRoles } from "@slices/authSlice/auth";
+import { type RootState, useAppSelector } from "@slices/store";
 
 export default function Layout() {
   const { enqueueSnackbar } = useSnackbar();
   const common = useAppSelector((state: RootState) => state.common);
   const navigate = useNavigate();
   const location = useLocation();
-  const theme = useTheme();
   const [open, setOpen] = useState(false);
   const roles = useSelector(selectRoles);
+  const theme = useTheme();
 
-  // Memoize enqueueSnackbar to prevent unnecessary re-renders
   const showSnackbar = useCallback(() => {
-    if (common.timestamp != null) {
+    if (common.timestamp !== null) {
       enqueueSnackbar(common.message, {
         variant: common.type,
         preventDuplicate: true,
@@ -49,61 +48,53 @@ export default function Layout() {
     }
   }, [common.message, common.type, common.timestamp, enqueueSnackbar]);
 
-  // Show Snackbar Notifications
   useEffect(() => {
     showSnackbar();
   }, [showSnackbar]);
 
-  // Handle Redirect After Login
   useEffect(() => {
-    const redirectUrl = localStorage.getItem("careers-app-redirect-url");
+    const redirectUrl = localStorage.getItem(savedRedirectUrl);
     if (redirectUrl) {
       navigate(redirectUrl);
-      localStorage.removeItem("careers-app-redirect-url");
+      localStorage.removeItem(savedRedirectUrl);
     }
   }, [navigate]);
 
   return (
     <ConfirmationModalContextProvider>
-      <Box sx={{ display: "flex" }}>
-        <CssBaseline />
-        <Sidebar
-          roles={roles}
-          currentPath={location.pathname}
-          open={open}
-          handleDrawer={() => setOpen(!open)}
-          theme={theme}
-        />
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          height: "100vh",
+          width: "100vw",
+          backgroundColor:
+            theme.palette.surface?.primary?.active ?? theme.palette.background.default,
+        }}
+      >
         <Header />
-        <Box
-          component="main"
-          sx={{
-            flexGrow: 1,
-            height: "100vh",
-            p: 3,
-            pt: 7.5,
-            pb: 4.5,
-          }}
-        >
-          <Suspense fallback={<div>Loading...</div>}>
-            <Outlet />
-          </Suspense>
+
+        <Box sx={{ display: "flex", flex: 1, overflow: "hidden" }}>
+          <Box sx={{ width: "fit-content", height: "100%" }}>
+            <Sidebar
+              roles={roles as string[]}
+              currentPath={location.pathname}
+              open={open}
+              handleDrawer={() => setOpen(!open)}
+            />
+          </Box>
+
           <Box
-            className="layout-note"
             sx={{
-              background:
-                theme.palette.mode === "light"
-                  ? (theme) =>
-                      alpha(
-                        theme.palette.secondary.main,
-                        theme.palette.action.activatedOpacity
-                      )
-                  : (theme) => alpha(theme.palette.common.black, 0.4),
+              flex: 1,
+              height: "100%",
+              overflowY: "auto",
+              padding: theme.spacing(3),
             }}
           >
-            <Typography variant="h6" sx={{ color: "#919090" }}>
-              v {pJson.version} | © {new Date().getFullYear()} WSO2 LLC
-            </Typography>
+            <Suspense fallback={<PreLoader isLoading message="Loading ..." />}>
+              <Outlet />
+            </Suspense>
           </Box>
         </Box>
       </Box>

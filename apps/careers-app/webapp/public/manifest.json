@@ -1,6 +1,6 @@
 {
-  "short_name": "Careers App",
-  "name": "Careers App",
+  "short_name": "WSO2 Careers",
+  "name": "WSO2 Careers Platform",
   "icons": [
     {
       "src": "favicon.ico",
@@ -10,6 +10,6 @@
   ],
   "start_url": ".",
   "display": "standalone",
-  "theme_color": "#000000",
+  "theme_color": "#FF7300",
   "background_color": "#ffffff"
 }

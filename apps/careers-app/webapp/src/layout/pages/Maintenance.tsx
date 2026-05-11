@@ -15,24 +15,26 @@
 // under the License.
 
 import { Box, Typography } from "@mui/material";
-import MaintenanceGif from "@assets/images/maintenance.gif";
 
 export default function MaintenancePage() {
   return (
     <Box
       sx={{
         display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
         flexDirection: "column",
-        minHeight: "100vh",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100vh",
+        gap: 2,
+        textAlign: "center",
+        px: 3,
       }}
     >
-      <img alt="maintenance" src={MaintenanceGif} />
-      <Typography variant="h4" style={{ color: "gray" }}>
-        Exciting changes are on the way! Our website is currently undergoing a
-        transformation to enhance your experience. Please check back soon to see
-        the amazing updates.
+      <Typography variant="h4" fontWeight={700}>
+        Under Maintenance
+      </Typography>
+      <Typography color="text.secondary" maxWidth={400}>
+        WSO2 Careers Platform is undergoing scheduled maintenance. Please check back shortly.
       </Typography>
     </Box>
   );

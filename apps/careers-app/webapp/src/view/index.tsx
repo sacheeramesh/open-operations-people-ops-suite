@@ -16,16 +16,20 @@
 
 import { lazy } from "react";
 
-const home = lazy(() => import("@view/home/home"));
-const applicants = lazy(() => import("@view/applicants/createApplicant"));
-const help = lazy(() => import("@view/help/help"));
-const vacancies = lazy(() => import("@view/vacancies/vacancies"));
-const vacancyDetail = lazy(() => import("@view/vacancies/vacancyDetail"));
+const dashboard = lazy(() => import("@view/dashboard/Dashboard"));
+const profile = lazy(() => import("@view/profile/Profile"));
+const jobs = lazy(() => import("@view/jobs/Jobs"));
+const jobDetail = lazy(() => import("@view/jobs/JobDetail"));
+const applications = lazy(() => import("@view/applications/Applications"));
+const savedJobs = lazy(() => import("@view/saved/SavedJobs"));
+const help = lazy(() => import("@view/help/Help"));
 
 export const View = {
-  home,
-  applicants,
+  dashboard,
+  profile,
+  jobs,
+  jobDetail,
+  applications,
+  savedJobs,
   help,
-  vacancies,
-  vacancyDetail,
 };

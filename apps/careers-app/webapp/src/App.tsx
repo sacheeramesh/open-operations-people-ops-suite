@@ -14,68 +14,81 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import "@src/App.scss";
-import { store } from "@slices/store";
-import { Provider } from "react-redux";
-import { ThemeMode } from "@utils/types";
 import AppHandler from "@app/AppHandler";
-import { themeSettings } from "@src/theme";
-import { SnackbarProvider } from "notistack";
-import AppAuthProvider from "@context/AuthContext";
 import { AuthProvider } from "@asgardeo/auth-react";
-import { createContext, useState, useMemo } from "react";
-import { APP_NAME, AsgardeoConfig } from "@config/config";
-import { ThemeProvider, createTheme } from "@mui/material/styles";
+import { StyledEngineProvider, ThemeProvider, createTheme } from "@mui/material/styles";
+import { SnackbarProvider } from "notistack";
+import { Provider } from "react-redux";
 
-export const ColorModeContext = createContext({ toggleColorMode: () => {} });
+import { createContext, useEffect, useMemo, useState } from "react";
+
+import { APP_NAME, AsgardeoConfig } from "@config/config";
+import AppAuthProvider from "@context/AuthContext";
+import { store } from "@slices/store";
+import { themeSettings } from "@src/theme";
+import { ThemeMode } from "@utils/types";
+
+import "./index.css";
+
+export const ColorModeContext = createContext({
+  mode: ThemeMode.Light,
+  toggleColorMode: () => {},
+});
 
 function App() {
-  document.title = APP_NAME;
+  document.title = APP_NAME || "WSO2 Careers";
+
   const processLocalThemeMode = (): ThemeMode => {
     try {
-      const savedTheme = localStorage.getItem("internal-app-theme");
+      const savedTheme = localStorage.getItem("careers-app-theme");
       if (savedTheme === ThemeMode.Light || savedTheme === ThemeMode.Dark) {
         return savedTheme;
       }
-
       const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
       const systemTheme = prefersDark ? ThemeMode.Dark : ThemeMode.Light;
-
-      localStorage.setItem("internal-app-theme", systemTheme);
+      localStorage.setItem("careers-app-theme", systemTheme);
       return systemTheme;
     } catch (err) {
-      console.error("Theme detection failed, defaulting to light mode.", err);
       return ThemeMode.Light;
     }
   };
 
   const [mode, setMode] = useState<ThemeMode>(processLocalThemeMode());
 
+  useEffect(() => {
+    document.documentElement.setAttribute("data-theme", mode);
+  }, [mode]);
+
   const colorMode = useMemo(
     () => ({
+      mode,
       toggleColorMode: () => {
-        localStorage.setItem("internal-app-theme", mode === ThemeMode.Light ? ThemeMode.Dark : ThemeMode.Light);
-        setMode((prevMode) => (prevMode === ThemeMode.Light ? ThemeMode.Dark : ThemeMode.Light));
+        const newMode = mode === ThemeMode.Light ? ThemeMode.Dark : ThemeMode.Light;
+        localStorage.setItem("careers-app-theme", newMode);
+        setMode(newMode);
+        document.documentElement.setAttribute("data-theme", newMode);
       },
     }),
-    [mode]
+    [mode],
   );
 
   const theme = useMemo(() => createTheme(themeSettings(mode)), [mode]);
 
   return (
     <ColorModeContext.Provider value={colorMode}>
-      <SnackbarProvider maxSnack={3} preventDuplicate>
-        <ThemeProvider theme={theme}>
-          <Provider store={store}>
-            <AuthProvider config={AsgardeoConfig}>
-              <AppAuthProvider>
-                <AppHandler />
-              </AppAuthProvider>
-            </AuthProvider>
-          </Provider>
-        </ThemeProvider>
-      </SnackbarProvider>
+      <StyledEngineProvider injectFirst>
+        <SnackbarProvider maxSnack={3} preventDuplicate>
+          <ThemeProvider theme={theme}>
+            <Provider store={store}>
+              <AuthProvider config={AsgardeoConfig}>
+                <AppAuthProvider>
+                  <AppHandler />
+                </AppAuthProvider>
+              </AuthProvider>
+            </Provider>
+          </ThemeProvider>
+        </SnackbarProvider>
+      </StyledEngineProvider>
     </ColorModeContext.Provider>
   );
 }

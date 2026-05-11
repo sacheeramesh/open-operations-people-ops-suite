@@ -12,21 +12,47 @@
 // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
-// under the License. 
+// under the License.
 
 export const SnackMessage = {
-    success: {
-    applicantCreate: "Applicant profile created successfully!",
-    applicantUpdate: "Applicant profile updated successfully!",
+  success: {
+    applicationSubmitted: "Application submitted successfully!",
+    profileUpdated: "Profile updated successfully!",
+    jobSaved: "Job saved to your list.",
+    resumeUploaded: "Resume uploaded successfully!",
   },
   error: {
-    applicantCreate: "Failed to create applicant.",
-    applicantUpdate: "Failed to update applicant.",
-    applicantUnknown: "An unknown error occurred.",
-    formValidation: "Please fill all required fields before saving.",
-    fetchPrivileges: "Failed to fetch Privileges",
+    fetchJobs: "Unable to retrieve job listings.",
+    fetchApplications: "Unable to retrieve your applications.",
+    fetchProfile: "Unable to retrieve your profile.",
+    submitApplication: "Failed to submit application. Please try again.",
     insufficientPrivileges: "Insufficient Privileges",
-    fetchAppConfigMessage: "Unable to retrieve app configurations",
+    fetchPrivileges: "Failed to fetch Privileges",
   },
   warning: {},
 };
+
+export const APP_DESC =
+  "Build your Candidate Passport and apply to WSO2 jobs with a single profile.";
+
+export const redirectUrl = "careers-app-redirect-url";
+
+export enum ApplicationStatus {
+  Applied = "Applied",
+  Screening = "Screening",
+  Interview = "Interview",
+  Offer = "Offer",
+  Rejected = "Rejected",
+}
+
+export enum Department {
+  Engineering = "Engineering",
+  Cloud = "Cloud",
+  DevRel = "Developer Relations",
+  Product = "Product",
+  Sales = "Sales",
+  HR = "Human Resources",
+  Marketing = "Marketing",
+}
+
+export const JOB_TYPES = ["Full Time", "Internship", "Consultancy", "Permanent"] as const;

@@ -14,33 +14,34 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import React from "react";
 import { Box, Button, Typography } from "@mui/material";
-import { Link as RouterLink, LinkProps as RouterLinkProps } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
-const Link = React.forwardRef<HTMLAnchorElement, RouterLinkProps>(function Link(itemProps, ref) {
-  return <RouterLink ref={ref} {...itemProps} role={undefined} />;
-});
-
-export default function Error() {
+export default function NotFoundPage() {
+  const navigate = useNavigate();
   return (
     <Box
       sx={{
         display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
         flexDirection: "column",
-        minHeight: "100vh",
+        alignItems: "center",
+        justifyContent: "center",
+        height: "100vh",
+        gap: 2,
+        textAlign: "center",
       }}
     >
-      <Typography variant="h1" style={{ color: "gray" }}>
+      <Typography variant="h1" fontWeight={800} sx={{ fontSize: "80px", color: "#FF7300" }}>
         404
       </Typography>
-      <Typography variant="h6" style={{ color: "gray" }}>
-        The page you're looking for doesn't exist..
+      <Typography variant="h5" fontWeight={600}>
+        Page Not Found
       </Typography>
-      <Button component={Link} to={"/"} variant="contained">
-        Back Home
+      <Typography color="text.secondary">
+        The page you are looking for doesn&apos;t exist or has been moved.
+      </Typography>
+      <Button variant="contained" onClick={() => navigate("/dashboard")} sx={{ mt: 1 }}>
+        Go to Dashboard
       </Button>
     </Box>
   );

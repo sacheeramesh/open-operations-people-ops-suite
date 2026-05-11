@@ -14,122 +14,130 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import React from "react";
-import { APP_NAME } from "@config/config";
+import { Avatar, Box, Menu, MenuItem, Stack, Tooltip, Typography, useTheme } from "@mui/material";
 import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
+
+import React from "react";
+
+import wso2LogoBlack from "@assets/images/wso2-logo_black.svg";
+import wso2LogoWhite from "@assets/images/wso2-logo_white.svg";
+import { APP_NAME } from "@config/config";
 import { useAppAuthContext } from "@context/AuthContext";
-import { useNavigate } from "react-router-dom";
+import BasicBreadcrumbs from "@layout/BreadCrumbs/BreadCrumbs";
 import { RootState, useAppSelector } from "@slices/store";
-import { AppBar, Avatar, Box, Menu, MenuItem, Stack, Tooltip } from "@mui/material";
 
 const Header = () => {
   const authContext = useAppAuthContext();
+  const theme = useTheme();
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(null);
   const user = useAppSelector((state: RootState) => state.user);
-  const navigate = useNavigate();
-
-  const handleOpenUserMenu = (event: React.MouseEvent<HTMLElement>) => {
-    setAnchorElUser(event.currentTarget);
-  };
-
-  const handleCloseUserMenu = () => {
-    setAnchorElUser(null);
-  };
 
   return (
-    <AppBar
-      position="fixed"
+    <Box
       sx={{
-        zIndex: (theme) => theme.zIndex.drawer + 1,
-        color: (theme) => (theme.palette.mode === "light" ? theme.palette.primary.main : theme.palette.common.white),
-
-        background: (theme) =>
-          theme.palette.mode === "light" ? theme.palette.common.white : theme.palette.primary.dark,
-        boxShadow: 2,
+        zIndex: 10,
+        backgroundColor: theme.palette.surface?.territory?.active ?? theme.palette.background.paper,
+        borderBottom: `1px solid ${theme.palette.divider}`,
+        boxShadow: "0 1px 3px rgba(0,0,0,0.06)",
       }}
     >
       <Toolbar
         variant="dense"
         sx={{
-          paddingY: 0.3,
-          "&.MuiToolbar-root": {
-            pl: 0.3,
-          },
+          py: 0.5,
+          display: "flex",
+          gap: 1,
+          "&.MuiToolbar-root": { pl: 1.5 },
         }}
       >
-        <img
-          alt="wso2"
-          style={{
-            height: "40px",
-            maxWidth: "100px",
-          }}
-          onClick={() => navigate("/")}
-          src={require("@assets/images/wso2-logo.svg").default}
-        ></img>
-        <Typography
-          variant="h5"
-          sx={{
-            ml: 1,
-            flexGrow: 1,
-            fontWeight: 600,
-          }}
-        >
-          {APP_NAME}
-        </Typography>
+        {/* Logo */}
+        <Stack direction="row" alignItems="center" gap={1.5} sx={{ cursor: "pointer" }} onClick={() => (window.location.href = "/")}>
+          <Box
+            component="img"
+            src={theme.palette.mode === "dark" ? wso2LogoWhite : wso2LogoBlack}
+            alt="WSO2"
+            sx={{ height: 24, width: "auto", flexShrink: 0 }}
+          />
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              fontSize: "15px",
+              color: theme.palette.customText?.primary?.p1?.active ?? "text.primary",
+              whiteSpace: "nowrap",
+            }}
+          >
+            {APP_NAME.replace("WSO2 ", "")}
+          </Typography>
+        </Stack>
 
+        <BasicBreadcrumbs />
+
+        {/* Spacer */}
+        <Box sx={{ flex: 1 }} />
+
+        {/* User */}
         <Box sx={{ flexGrow: 0 }}>
           {user.userInfo && (
             <>
-              <Stack flexDirection={"row"} alignItems={"center"} gap={2}>
-                <Box>
-                  <Typography variant="body1" sx={{ fontWeight: 600 }}>
-                    {user.userInfo?.firstName + " " + user.userInfo.lastName}
-                  </Typography>
-                  <Typography variant="body2">{user.userInfo?.jobRole}</Typography>
-                </Box>
-                <Tooltip title="Open settings">
+              <Tooltip title="Account settings">
+                <Stack
+                  direction="row"
+                  alignItems="center"
+                  gap={1}
+                  sx={{ cursor: "pointer", py: 0.5, px: 1, borderRadius: "8px", "&:hover": { backgroundColor: "action.hover" } }}
+                  onClick={(e) => setAnchorElUser(e.currentTarget)}
+                >
                   <Avatar
-                    onClick={handleOpenUserMenu}
-                    sx={{ border: 1, borderColor: "primary.main" }}
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      fontSize: "13px",
+                      fontWeight: 700,
+                      backgroundColor: "#FF7300",
+                    }}
                     src={user.userInfo?.employeeThumbnail || ""}
-                    alt={user.userInfo?.firstName || "Avatar"}
                   >
                     {user.userInfo?.firstName?.charAt(0)}
                   </Avatar>
-                </Tooltip>
-              </Stack>
+                  <Box sx={{ display: { xs: "none", sm: "block" } }}>
+                    <Typography
+                      noWrap
+                      sx={{ fontSize: "13px", fontWeight: 600, lineHeight: 1.2, color: "text.primary" }}
+                    >
+                      {user.userInfo?.firstName} {user.userInfo?.lastName}
+                    </Typography>
+                    <Typography noWrap sx={{ fontSize: "11px", color: "text.secondary", lineHeight: 1.2 }}>
+                      {user.userInfo?.jobRole}
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Tooltip>
 
               <Menu
-                sx={{ mt: "45px" }}
-                id="menu-appbar"
+                sx={{ mt: "8px" }}
                 anchorEl={anchorElUser}
-                anchorOrigin={{
-                  vertical: "top",
-                  horizontal: "right",
-                }}
-                keepMounted
-                transformOrigin={{
-                  vertical: "top",
-                  horizontal: "right",
-                }}
+                anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+                transformOrigin={{ vertical: "top", horizontal: "right" }}
                 open={Boolean(anchorElUser)}
-                onClose={handleCloseUserMenu}
+                onClose={() => setAnchorElUser(null)}
+                PaperProps={{ sx: { borderRadius: "10px", minWidth: 160 } }}
               >
                 <MenuItem
-                  key={"logout"}
                   onClick={() => {
+                    setAnchorElUser(null);
                     authContext.appSignOut();
                   }}
+                  sx={{ fontSize: "14px" }}
                 >
-                  <Typography textAlign="center">Logout</Typography>
+                  Logout
                 </MenuItem>
               </Menu>
             </>
           )}
         </Box>
       </Toolbar>
-    </AppBar>
+    </Box>
   );
 };
 

@@ -12,17 +12,18 @@
 // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
-// under the License. 
-
-export type stateType = "failed" | "success" | "loading" | "idle";
-
-export interface Header {
-  title: string;
-  size: number;
-  align: "left" | "right" | "center";
-}
+// under the License.
 
 export enum ThemeMode {
   Light = "light",
   Dark = "dark",
+}
+
+export interface PreLoaderProps {
+  message?: string;
+  isLoading?: boolean;
+}
+
+export interface ErrorHandlerProps {
+  message: string | null;
 }

@@ -14,275 +14,160 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import List from "@mui/material/List";
-import { SIDEBAR_WIDTH } from "@config/ui";
+import { Box, Divider, Stack, Tooltip, Typography, useTheme } from "@mui/material";
+import { ChevronLeft, ChevronRight, Moon, Sun } from "lucide-react";
+import { useLocation } from "react-router-dom";
+
+import { useMemo, useState } from "react";
+
+import { NavState } from "@/types/types";
+import SidebarNavItem from "@component/layout/SidebarNavItem";
 import { ColorModeContext } from "@src/App";
-import MuiDrawer from "@mui/material/Drawer";
-import { Stack, Typography } from "@mui/material";
-import IconButton from "@mui/material/IconButton";
 import { getActiveRouteDetails } from "@src/route";
-import { MUIStyledCommonProps } from "@mui/system";
-import ListLinkItem from "@component/layout/LinkItem";
-import ChevronLeftIcon from "@mui/icons-material/ChevronLeft";
-import ChevronRightIcon from "@mui/icons-material/ChevronRight";
-import { useLocation, matchPath, useMatches, useNavigate } from "react-router-dom";
-import DarkModeOutlinedIcon from "@mui/icons-material/DarkModeOutlined";
-import LightModeOutlinedIcon from "@mui/icons-material/LightModeOutlined";
-import { styled, Theme, CSSObject, alpha, useTheme } from "@mui/material/styles";
 
 interface SidebarProps {
   open: boolean;
-  theme: Theme;
   handleDrawer: () => void;
   roles: string[];
   currentPath: string;
 }
 
-function useRouteMatch(patterns: readonly string[]) {
-  const { pathname } = useLocation();
-
-  let matches = useMatches();
-
-  for (let i = patterns.length - 1; i >= 0; i -= 1) {
-    const pattern = patterns[i];
-    if (pattern !== "/" && pathname.startsWith(pattern + "/")) {
-      return i;
-    }
-  }
-
-  for (let i = 0; i < patterns.length; i += 1) {
-    const pattern = patterns[i];
-    const possibleMatch = matchPath(pattern, pathname);
-    if (possibleMatch !== null) {
-      return patterns.indexOf(possibleMatch.pattern.path);
-    }
-  }
-  for (let i = 0; i < matches.length; i += 1) {
-    if (patterns.indexOf(matches[i].pathname) !== -1) {
-      return patterns.indexOf(matches[i].pathname);
-    }
-  }
-
-  return null;
-}
-
 const Sidebar = (props: SidebarProps) => {
-  const currentIndex = useRouteMatch([...getActiveRouteDetails(props.roles).map((r) => r.path)]);
+  const allRoutes = useMemo(() => getActiveRouteDetails(props.roles), [props.roles]);
+  const location = useLocation();
   const theme = useTheme();
-  const navigate = useNavigate();
+
+  const [navState, setNavState] = useState<NavState>({ active: null, hovered: null, expanded: null });
+
+  const handleClick = (idx: number) => {
+    setNavState((prev) => ({ ...prev, active: prev.active === idx ? null : idx }));
+  };
+
+  const renderControlButton = (
+    icon: React.ReactNode,
+    onClick?: () => void,
+    tooltipTitle?: string,
+  ) => {
+    const button = (
+      <Box
+        component="button"
+        type="button"
+        onClick={onClick}
+        disabled={!onClick}
+        aria-label={tooltipTitle}
+        sx={{
+          width: props.open ? "100%" : "fit-content",
+          padding: theme.spacing(1),
+          borderRadius: "8px",
+          cursor: onClick ? "pointer" : "default",
+          border: "none",
+          background: "none",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: props.open ? "flex-start" : "center",
+          gap: theme.spacing(1),
+          color: theme.palette.customNavigation?.text ?? theme.palette.text.secondary,
+          transition: "all 0.2s ease-in-out",
+          ...(onClick && {
+            "&:hover": {
+              backgroundColor: theme.palette.customNavigation?.hoverBg ?? "action.hover",
+              color: theme.palette.customNavigation?.hover ?? "text.primary",
+            },
+          }),
+        }}
+      >
+        {icon}
+      </Box>
+    );
+
+    if (tooltipTitle && !props.open) {
+      return (
+        <Tooltip title={tooltipTitle} placement="right" arrow>
+          {button}
+        </Tooltip>
+      );
+    }
+    return button;
+  };
 
   return (
     <ColorModeContext.Consumer>
-      {(colorMode) => (
-        <Drawer
-          variant="permanent"
-          open={props.open}
-          sx={{
-            "& .MuiDrawer-paper": {
-              background: alpha(theme.palette.primary.dark, 1),
-            },
-          }}
-        >
-          <List
+      {(colorMode) => {
+        const currentYear = new Date().getFullYear();
+
+        return (
+          <Box
             sx={{
+              height: "100%",
+              paddingY: "16px",
+              paddingX: "12px",
+              backgroundColor:
+                theme.palette.surface?.secondary?.active ?? theme.palette.background.default,
+              borderRight: `1px solid ${theme.palette.divider}`,
+              zIndex: 10,
               display: "flex",
               flexDirection: "column",
-              pt: 6.5,
+              width: props.open ? "200px" : "fit-content",
+              transition: "width 0.2s ease",
             }}
           >
-            {getActiveRouteDetails(props.roles).map((r, idx) => (
-              <div key={idx}>
-                {!r.bottomNav && (
-                  <ListLinkItem
-                    key={idx}
-                    theme={props.theme}
-                    to={r.path}
-                    primary={r.text}
-                    icon={r.icon}
-                    open={props.open}
-                    isActive={currentIndex === idx}
-                  />
-                )}
-              </div>
-            ))}
-          </List>
-          <DrawerSpace />
-          <DrawerFooter>
-            <Stack flexDirection={"column"} gap={3}>
-              {getActiveRouteDetails(props.roles).map(
-                (r, idx) =>
-                  r.bottomNav && (
-                    <IconButton
-                      key={"bottom-" + idx}
-                      onClick={() => navigate(r.path)}
-                      sx={{
-                        color: (theme) => theme.palette.common.white,
-                        ...(currentIndex === idx && {
-                          color: (theme) => theme.palette.primary.main,
-                        }),
-                        "&:hover": {
-                          background: (theme) =>
-                            theme.palette.mode === "light"
-                              ? alpha(theme.palette.common.white, 0.35)
-                              : alpha(theme.palette.primary.main, 0.35),
-                          ...(!props.open && {
-                            "& .menu-tooltip": {
-                              marginLeft: -3,
-                              opacity: 1,
-                              visibility: "visible",
-                              boxShadow: theme.palette.mode === "dark" ? "0px 0px 10px rgba(120, 125, 129, 0.2)" : 10,
-                            },
-                          }),
-                        },
-                        ...(currentIndex === idx && {
-                          background: (theme) =>
-                            theme.palette.mode === "light"
-                              ? alpha(theme.palette.common.white, 0.5)
-                              : alpha(theme.palette.primary.main, 0.2),
-                        }),
-                      }}
-                    >
-                      {r.icon}
-                      <span className="menu-tooltip">
-                        <Typography sx={{ color: "white" }} variant="h6">
-                          {r.text}
-                        </Typography>
-                      </span>
-                    </IconButton>
+            {/* Navigation List */}
+            <Stack
+              direction="column"
+              gap={0.75}
+              sx={{ overflow: "visible", width: props.open ? "100%" : "fit-content" }}
+            >
+              {allRoutes.map((route, idx) => {
+                const isActivePath =
+                  location.pathname === route.path ||
+                  (route.path !== "/" && location.pathname.startsWith(route.path));
+
+                return (
+                  !route.bottomNav && (
+                    <Box key={idx} sx={{ width: props.open ? "100%" : "fit-content" }}>
+                      <SidebarNavItem
+                        route={route}
+                        open={props.open}
+                        isActive={navState.active === null ? isActivePath : navState.active === idx}
+                        onClick={() => handleClick(idx)}
+                      />
+                    </Box>
                   )
-              )}
-              <IconButton
-                onClick={colorMode.toggleColorMode}
-                color="inherit"
-                sx={{
-                  color: "white",
-                  "&:hover": {
-                    background: alpha(props.theme.palette.common.white, 0.05),
-                    ...(!props.open && {
-                      "& .menu-tooltip": {
-                        marginLeft: -3,
-                        opacity: 1,
-                        visibility: "visible",
-                        boxShadow: theme.palette.mode === "dark" ? "0px 0px 10px rgba(120, 125, 129, 0.2)" : 10,
-                      },
-                    }),
-                  },
-                }}
-              >
-                {props.theme.palette.mode === "dark" ? <LightModeOutlinedIcon /> : <DarkModeOutlinedIcon />}
-                <span className="menu-tooltip">
-                  <Typography variant="h6">
-                    {"Switch to " + (props.theme.palette.mode === "dark" ? "light" : "dark") + " mode"}
-                  </Typography>
-                </span>
-              </IconButton>
-              <IconButton
-                onClick={props.handleDrawer}
-                color="inherit"
-                sx={{
-                  color: "white",
-                  "&:hover": {
-                    background: alpha(props.theme.palette.common.white, 0.05),
-                    ...(!props.open && {
-                      "& .menu-tooltip": {
-                        marginLeft: -3,
-                        opacity: 1,
-                        visibility: "visible",
-                        boxShadow: theme.palette.mode === "dark" ? "0px 0px 10px rgba(120, 125, 129, 0.2)" : 10,
-                      },
-                    }),
-                  },
-                }}
-              >
-                {!props.open ? (
-                  <ChevronRightIcon sx={{ color: "white" }} />
-                ) : (
-                  <ChevronLeftIcon sx={{ color: "white" }} />
-                )}
-                <span className="menu-tooltip">
-                  <Typography variant="h6">{(props.open ? "Collapse" : "Expand") + " Sidebar"}</Typography>
-                </span>
-              </IconButton>
+                );
+              })}
             </Stack>
-          </DrawerFooter>
-        </Drawer>
-      )}
+
+            <Box sx={{ flexGrow: 1 }} />
+
+            {/* Footer Controls */}
+            <Stack direction="column" gap={0.5} sx={{ pb: "8px" }}>
+              {renderControlButton(
+                colorMode.mode === "dark" ? <Sun size={18} /> : <Moon size={18} />,
+                colorMode.toggleColorMode,
+                colorMode.mode === "dark" ? "Switch to Light Mode" : "Switch to Dark Mode",
+              )}
+
+              {renderControlButton(
+                !props.open ? <ChevronRight size={18} /> : <ChevronLeft size={18} />,
+                props.handleDrawer,
+                props.open ? "Collapse Sidebar" : "Expand Sidebar",
+              )}
+
+              <Divider sx={{ my: 0.5 }} />
+
+              {renderControlButton(
+                <Typography variant="caption" sx={{ whiteSpace: "nowrap", color: "inherit" }}>
+                  {props.open ? `© ${currentYear} WSO2 LLC` : "v2"}
+                </Typography>,
+                undefined,
+                `WSO2 Careers v2.0`,
+              )}
+            </Stack>
+          </Box>
+        );
+      }}
     </ColorModeContext.Consumer>
   );
 };
 
 export default Sidebar;
-
-interface DrawerHeaderInterface extends MUIStyledCommonProps {
-  open: boolean;
-}
-
-const DrawerSpace = styled("div")(({ theme }) => ({
-  flex: 1,
-  ...theme.mixins.toolbar,
-}));
-
-export const DrawerFooter = styled("div")(({ theme }) => ({
-  position: "absolute",
-  bottom: 0,
-  left: 0,
-  width: "100%",
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "space-between",
-  padding: theme.spacing(1.5),
-}));
-
-const Drawer = styled(MuiDrawer, {
-  shouldForwardProp: (prop) => prop !== "open",
-})(({ theme, open }) => ({
-  width: SIDEBAR_WIDTH,
-  flexShrink: 0,
-  display: "flex",
-  whiteSpace: "nowrap",
-  ...(open && {
-    ...openedMixin(theme),
-    "& .MuiDrawer-paper": openedMixin(theme),
-  }),
-  ...(!open && {
-    ...closedMixin(theme),
-    "& .MuiDrawer-paper": closedMixin(theme),
-  }),
-}));
-
-// When sideBar opens
-const openedMixin = (theme: Theme): CSSObject => ({
-  width: SIDEBAR_WIDTH,
-  transition: theme.transitions.create("width", {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.enteringScreen,
-  }),
-  overflowX: "hidden",
-  padding: theme.spacing(0.5),
-});
-
-// When sideBar closes
-const closedMixin = (theme: Theme): CSSObject => ({
-  transition: theme.transitions.create("width", {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
-  overflowX: "hidden",
-  width: theme.spacing(7),
-  padding: theme.spacing(0.5),
-});
-
-export const DrawerHeader = styled("div")<DrawerHeaderInterface>(({ theme, open }) => ({
-  display: "flex",
-  alignItems: "center",
-  justifyContent: "flex-end",
-  padding: theme.spacing(0.5),
-  transition: theme.transitions.create(["display"], {
-    easing: theme.transitions.easing.sharp,
-    duration: theme.transitions.duration.leavingScreen,
-  }),
-  ...theme.mixins.toolbar,
-  ...(open && {
-    justifyContent: "flex-start",
-  }),
-}));

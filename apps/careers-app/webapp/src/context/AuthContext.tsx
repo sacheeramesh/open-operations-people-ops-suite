@@ -14,41 +14,40 @@
 // specific language governing permissions and limitations
 // under the License.
 
-import { Button } from "@mui/material";
-import Dialog from "@mui/material/Dialog";
-import { APIService } from "@utils/apiService";
+import { useAuthContext } from "@asgardeo/auth-react";
 import { useIdleTimer } from "react-idle-timer";
-import DialogTitle from "@mui/material/DialogTitle";
+
+import React, { useCallback, useContext, useEffect, useState } from "react";
+
 import PreLoader from "@component/common/PreLoader";
-import { getUserInfo } from "@slices/userSlice/user";
-import DialogActions from "@mui/material/DialogActions";
-import DialogContent from "@mui/material/DialogContent";
-import StatusWithAction from "@component/ui/StatusWithAction";
-import React, { useContext, useEffect, useState } from "react";
-import DialogContentText from "@mui/material/DialogContentText";
-import { useAuthContext, SecureApp } from "@asgardeo/auth-react";
-import { loadPrivileges, setUserAuthData } from "@slices/authSlice/auth";
-import { RootState, useAppDispatch, useAppSelector } from "@slices/store";
+import SessionWarningDialog from "@component/common/SessionWarningDialog";
+import LoginScreen from "@component/ui/LoginScreen";
+import { setUserAuthData } from "@slices/authSlice/auth";
+import { useAppDispatch } from "@slices/store";
+import { setUserInfo } from "@slices/userSlice/user";
 
 type AuthContextType = {
   appSignIn: () => void;
   appSignOut: () => void;
 };
+
 const AuthContext = React.createContext<AuthContextType>({} as AuthContextType);
 
-const timeout = 1800_000;
+const timeout = 15 * 60 * 1000;
 const promptBeforeIdle = 4_000;
 
 const AppAuthProvider = (props: { children: React.ReactNode }) => {
-  const [open, setOpen] = useState<boolean>(false);
-  const [appState, setAppState] = useState<"logout" | "active" | "loading">("loading");
+  const { signIn, signOut, state, getBasicUserInfo, getDecodedIDToken } = useAuthContext();
+  const isAuthenticated = state.isAuthenticated;
+  const isLoading = state.isLoading;
+
+  const [sessionWarningOpen, setSessionWarningOpen] = useState<boolean>(false);
+  const [userLoaded, setUserLoaded] = useState<boolean>(false);
 
   const dispatch = useAppDispatch();
-  const auth = useAppSelector((state: RootState) => state.auth);
-  const userInfo = useAppSelector((state: RootState) => state.user);
 
   const onPrompt = () => {
-    appState === "active" && setOpen(true);
+    isAuthenticated && setSessionWarningOpen(true);
   };
 
   const { activate } = useIdleTimer({
@@ -59,143 +58,64 @@ const AppAuthProvider = (props: { children: React.ReactNode }) => {
   });
 
   const handleContinue = () => {
-    setOpen(false);
+    setSessionWarningOpen(false);
     activate();
   };
 
-  const {
-    signIn,
-    signOut,
-    getDecodedIDToken,
-    getBasicUserInfo,
-    refreshAccessToken,
-    isAuthenticated,
-    getIDToken,
-    state,
-  } = useAuthContext();
-
   useEffect(() => {
-    var appStatus = localStorage.getItem("careers-app-state");
+    if (!isAuthenticated || userLoaded) return;
 
-    if (!localStorage.getItem("careers-app-redirect-url")) {
-      localStorage.setItem("careers-app-redirect-url", window.location.href.replace(window.location.origin, ""));
-    }
-
-    if (appStatus && appStatus === "logout") {
-      setAppState("logout");
-    } else {
-      setAppState("active");
-    }
-  }, []);
-
-  useEffect(() => {
-    if (appState === "active") {
-      if (state.isAuthenticated) {
-        Promise.all([getBasicUserInfo(), getIDToken(), getDecodedIDToken()]).then(
-          async ([userInfo, idToken, decodedIdToken]) => {
-            dispatch(
-              setUserAuthData({
-                userInfo: userInfo,
-                idToken: idToken,
-                decodedIdToken: decodedIdToken,
-              })
-            );
-            new APIService(idToken, refreshToken);
-          }
+    const loadUser = async () => {
+      try {
+        const [userInfo, idToken] = await Promise.all([getBasicUserInfo(), getDecodedIDToken()]);
+        dispatch(setUserAuthData({ userInfo, decodedIdToken: idToken }));
+        dispatch(
+          setUserInfo({
+            personId: idToken.sub ?? "",
+            firstName: (userInfo.givenName as string) ?? "",
+            lastName: (userInfo.familyName as string) ?? "",
+            workEmail: (userInfo.email as string) ?? "",
+            employeeThumbnail: (userInfo.profile as string) ?? null,
+            jobRole: null,
+          }),
         );
+        setUserLoaded(true);
+      } catch {
+        signOut();
       }
-    }
-  }, [appState, state.isAuthenticated]);
+    };
 
-  useEffect(() => {
-    if (appState === "active") {
-      if (state.isAuthenticated) {
-        if (userInfo.state !== "loading") {
-          dispatch(getUserInfo()).then(() => {
-            dispatch(loadPrivileges());
-          });
-        }
-      } else {
-        signIn();
-      }
-    } else if (appState === "loading") {
-      <PreLoader isLoading={true} message={auth.statusMessage}></PreLoader>;
-    }
-  }, [auth.userInfo]);
+    loadUser();
+  }, [isAuthenticated, userLoaded, getBasicUserInfo, getDecodedIDToken, dispatch]);
 
-  const refreshToken = () => {
-    return new Promise<{ idToken: string }>(async (resolve) => {
-      const userIsAuthenticated = await isAuthenticated();
-      if (userIsAuthenticated) {
-        resolve({ idToken: await getIDToken() });
-      } else {
-        refreshAccessToken()
-          .then(async (res) => {
-            const idToken = await getIDToken();
-            resolve({ idToken: idToken });
-          })
-          .catch((error) => {
-            appSignOut();
-          });
-      }
-    });
-  };
+  const appSignIn = useCallback(() => {
+    signIn();
+  }, [signIn]);
 
-  const appSignOut = async () => {
-    setAppState("loading");
-    localStorage.setItem("careers-app-state", "logout");
-    await signOut();
-    setAppState("logout");
-  };
+  const appSignOut = useCallback(() => {
+    setUserLoaded(false);
+    signOut();
+  }, [signOut]);
 
-  const appSignIn = async () => {
-    setAppState("active");
-    localStorage.setItem("careers-app-state", "active");
-  };
+  const authContext: AuthContextType = { appSignIn, appSignOut };
 
-  const authContext: AuthContextType = {
-    appSignIn: appSignIn,
-    appSignOut: appSignOut,
-  };
+  if (isLoading) {
+    return <PreLoader isLoading message="Setting up your Candidate Passport ..." />;
+  }
 
   return (
-    <>
-      {appState === "loading" ? (
-        <PreLoader isLoading={true} message="" />
-      ) : (
-        <>
-          <Dialog
-            open={open}
-            onClose={handleContinue}
-            aria-labelledby="alert-dialog-title"
-            aria-describedby="alert-dialog-description"
-          >
-            <DialogTitle id="alert-dialog-title">{"Are you still there?"}</DialogTitle>
-            <DialogContent>
-              <DialogContentText id="alert-dialog-description">
-                It looks like you've been inactive for a while. Would you like to continue?
-              </DialogContentText>
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={handleContinue}>Continue</Button>
-              <Button onClick={() => appSignOut()}>Logout</Button>
-            </DialogActions>
-          </Dialog>
-          {appState === "active" ? (
-            <AuthContext.Provider value={authContext}>
-              <SecureApp>{props.children}</SecureApp>
-            </AuthContext.Provider>
-          ) : (
-            <StatusWithAction action={() => appSignIn()} />
-          )}
-        </>
-      )}
-    </>
+    <AuthContext.Provider value={authContext}>
+      <SessionWarningDialog
+        open={sessionWarningOpen}
+        handleContinue={handleContinue}
+        appSignOut={appSignOut}
+      />
+      {isAuthenticated && userLoaded ? props.children : <LoginScreen />}
+    </AuthContext.Provider>
   );
 };
 
 const useAppAuthContext = (): AuthContextType => useContext(AuthContext);
 
 export { useAppAuthContext };
-
 export default AppAuthProvider;

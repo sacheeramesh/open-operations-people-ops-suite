@@ -12,17 +12,16 @@
 // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
-// under the License. 
+// under the License.
 
-import { enableMapSet } from "immer";
-import authReducer from "@slices/authSlice/auth";
-import userReducer from "@slices/userSlice/user";
 import { configureStore } from "@reduxjs/toolkit";
-import commonReducer from "@slices/commonSlice/common";
-import appConfigReducer from "@slices/configSlice/config";
-import applicantReducer from "@slices/applicantSlice/applicant";
-import vacanciesReducer from "@slices/vacanciesSlice/vacancies";
+import { enableMapSet } from "immer";
 import { TypedUseSelectorHook, useDispatch, useSelector } from "react-redux";
+
+import authReducer from "@slices/authSlice/auth";
+import careersReducer from "@slices/careersSlice/careers";
+import commonReducer from "@slices/commonSlice/common";
+import userReducer from "@slices/userSlice/user";
 
 enableMapSet();
 
@@ -31,12 +30,9 @@ export const store = configureStore({
     auth: authReducer,
     user: userReducer,
     common: commonReducer,
-    appConfig: appConfigReducer,
-    applicant: applicantReducer,
-    vacancies: vacanciesReducer,
+    careers: careersReducer,
   },
-  middleware: (getDefaultMiddleware) =>
-    getDefaultMiddleware(),
+  middleware: (getDefaultMiddleware) => getDefaultMiddleware(),
 });
 
 export type RootState = ReturnType<typeof store.getState>;

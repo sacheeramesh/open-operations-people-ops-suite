@@ -12,11 +12,12 @@
 // "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
-// under the License. 
+// under the License.
 
-import { VariantType } from "notistack";
-import { AppDispatch } from "@slices/store";
-import { createSlice, PayloadAction } from "@reduxjs/toolkit";
+import { createSlice, type PayloadAction } from "@reduxjs/toolkit";
+import type { VariantType } from "notistack";
+
+import type { AppDispatch } from "@slices/store";
 
 export interface CommonState {
   message: string;
@@ -39,7 +40,7 @@ export const CommonSlice = createSlice({
       action: PayloadAction<{
         message: string;
         type: VariantType;
-      }>
+      }>,
     ) => {
       state.message = action.payload.message;
       state.type = action.payload.type;
@@ -52,14 +53,10 @@ export function ShowSnackBarMessage(message: string, type: VariantType) {
   return (dispatch: AppDispatch) => {
     dispatch({
       type: "common/enqueueSnackbarMessage",
-      payload: {
-        message: message,
-        type: type,
-      },
+      payload: { message, type },
     });
   };
 }
 
 export const { enqueueSnackbarMessage } = CommonSlice.actions;
-
 export default CommonSlice.reducer;
