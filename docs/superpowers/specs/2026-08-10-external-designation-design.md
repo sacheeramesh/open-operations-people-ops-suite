@@ -81,8 +81,17 @@ Follows `job_role` line for line:
 - **`modules/database/types.bal`** — `string? externalDesignation` on the employee record type and
   on the add/update payload types, beside the existing `jobRole` declarations.
 - **`modules/database/db_queries.bal`**:
-  - `e.external_designation AS externalDesignation` added to the three SELECT lists that already
-    project `e.job_role AS jobRole` (~lines 154, 239, 495).
+  - `e.external_designation AS externalDesignation` added to the two SELECT lists that project
+    `e.job_role AS jobRole` — the single-employee query (~line 155) and the employee-list query
+    (~line 240). The list query is what feeds the All Employees and My Team tables and the report
+    grid, so it is required for those surfaces to render the field at all.
+  - **Also added to the basic-info query (~line 495)**, which projects `secondary_job_title` but
+    *not* `job_role`. This query backs `EmployeeBasicInfo`, returned by `getEmployeeBasicInfo` →
+    `/user-info` (`service.bal:82`) and `getAllEmployeesBasicInfo` (`service.bal:659`). The **Me**
+    page renders from `userSlice`, which is populated from `/user-info` — so without this
+    projection the Me page field would always be empty. `EmployeeBasicInfo` in `types.bal`
+    (~line 84, where the composed `designation` is declared) therefore also needs an
+    `externalDesignation` member.
   - The insert value added alongside `${payload.jobRole}` (~line 1448).
   - A conditional-update block matching the `payload.jobRole` pattern (~line 1710), including its
     empty-string-means-clear behavior, so clearing the field in the UI nulls the column.
@@ -98,10 +107,44 @@ Follows `job_role` line for line:
   `error`/`helperText` bound to Formik state, and `inputProps={{ maxLength: 100 }}` to match the
   column width. Yup: `.max(100)` with the whitespace-to-null transform the neighbouring fields use,
   and `.nullable()` — the field is optional regardless of employee status.
-- **`view/reports/reportColumns.ts`** — `{ key: "externalDesignation", label: "External
-  Designation", group: "Job & Career" }`, beside the existing `jobRole` entry, so it is available
-  as a selectable report column.
+- **`view/employees/onboarding/singleOnboarding/steps/Review.tsx`** — a `ReviewField` in the same
+  section as Job Role (~line 425) and Secondary Job Title (~line 390). A field an admin fills in
+  Job Info must appear in the Review summary, or they confirm a record that hides it.
 - **`EmployeeForm.tsx`** — included in the edit-mode patch payload alongside the other job fields.
+
+#### Report layer (two files, both required)
+
+The report layer registers a column in one file and renders it in another. Updating only one
+leaves the column either unselectable or unrenderable.
+
+- **`view/reports/reportColumns.ts`** — `{ key: "externalDesignation", label: "External
+  Designation", group: "Job & Career" }`, beside the existing `jobRole` entry.
+- **`view/reports/EmployeeReportTable.tsx`** — a matching column definition (~line 166, where
+  `jobRole` is defined), following the `textCol` pattern used by its neighbours and reading
+  `row.externalDesignation`.
+
+Note an existing quirk, left untouched: the column keyed `jobRole` in `EmployeeReportTable.tsx`
+sets `field: "designation"` and its `valueGetter` returns `row.designation` — so the column
+labelled "Job Role" actually renders the *composed* designation, not `row.jobRole`. There is
+therefore no raw-field title column to copy; the new column is genuinely new. Whether that quirk
+is a bug is out of scope here.
+
+#### Employee list and profile views
+
+These three views currently display only the composed `designation`. Each gets the external
+designation as an additional, clearly labelled surface:
+
+- **`view/employees/employeesView/employeesTable/EmployeesTable.tsx`** — a column after the
+  existing `designation` column (~line 186), matching its `Tooltip` + ellipsis `renderCell`
+  treatment, headed "External Designation", falling back to `"N/A"` as its neighbours do.
+- **`view/employees/myTeam/MyTeamTable.tsx`** — the same column, matching that file's slightly
+  narrower `flex`/`minWidth` conventions (~line 189).
+- **`view/me/index.tsx`** — this page shows the designation in *two* places: a `Chip` in the
+  profile header (~line 647) and a labelled field in the details grid (~line 790). Add external
+  designation **only to the details grid**, as a labelled field beside "Designation" and
+  "Job Band". The header chip row is an identity summary; adding a second title chip there
+  duplicates information at the most prominent point on the page. The field is omitted entirely
+  when empty, consistent with how the page treats other optional values.
 
 ### 4. Out of scope
 
@@ -138,5 +181,24 @@ identical. That is a future option, not part of this work.
 | `webapp/src/slices/employeeSlice/employee.ts` | *(modify)* Interface field |
 | `webapp/src/types/types.tsx` | *(modify)* Interface field + default |
 | `webapp/src/view/employees/onboarding/singleOnboarding/steps/JobInfo.tsx` | *(modify)* TextField + Yup rule |
+| `webapp/src/view/employees/onboarding/singleOnboarding/steps/Review.tsx` | *(modify)* ReviewField in the job section |
 | `webapp/src/view/employees/onboarding/EmployeeForm.tsx` | *(modify)* Edit-mode patch payload |
-| `webapp/src/view/reports/reportColumns.ts` | *(modify)* Report column entry |
+| `webapp/src/view/reports/reportColumns.ts` | *(modify)* Report column registry entry |
+| `webapp/src/view/reports/EmployeeReportTable.tsx` | *(modify)* Report column renderer |
+| `webapp/src/view/employees/employeesView/employeesTable/EmployeesTable.tsx` | *(modify)* Column after `designation` |
+| `webapp/src/view/employees/myTeam/MyTeamTable.tsx` | *(modify)* Column after `designation` |
+| `webapp/src/view/me/index.tsx` | *(modify)* Labelled field in the details grid (not the header chip) |
+
+### Surface audit
+
+Every place that displays employment information was enumerated, not inferred:
+
+| Surface | Shows today | External designation |
+|---|---|---|
+| Job Info step | Job Role, Secondary Job Title | Editable input |
+| Review step | Job Role, Secondary Job Title | Shown |
+| Reports (registry + renderer) | Composed designation, job band | New selectable column |
+| All Employees table | Composed designation | New column |
+| My Team table | Composed designation | New column |
+| Me page | Composed designation (chip + grid) | Grid field only |
+| microapp | No job-title fields | Not applicable |
