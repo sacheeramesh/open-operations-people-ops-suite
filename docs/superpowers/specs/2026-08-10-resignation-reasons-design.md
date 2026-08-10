@@ -70,10 +70,17 @@ Existing wiring carries over unchanged: `sx={textFieldSx}`, error/`helperText` b
 
 - **`freeSolo`** — custom text is permitted.
 - **Explicit custom-entry row** — `filterOptions` performs standard filtering, then appends a
-  synthetic `Add "<text>"` row when the trimmed input matches no option case-insensitively.
-  Selecting that row commits the raw typed text. This makes off-list entry a deliberate act and
-  prevents a half-typed option (e.g. `Retire`) from being saved as-is when the user moves on
-  without clicking a suggestion.
+  synthetic Add row when the trimmed input matches no option case-insensitively. Selecting that
+  row commits the typed text. This makes off-list entry a deliberate act and prevents a
+  half-typed option (e.g. `Retire`) from being saved as-is when the user moves on without
+  clicking a suggestion.
+
+  The Add row is a sentinel **object** (`{ addCustom: true, value }`), not a marker string, and
+  `onChange` branches on its type to extract the clean `value`. This matters: MUI hands
+  `onChange` the raw option, and `getOptionLabel` affects only rendering — so a string marker
+  like `Add "<text>"` would be persisted verbatim while the input displayed the stripped text.
+  An object sentinel also cannot collide with user text containing quotes. The `Add "…"` wording
+  survives as display-only, via `renderOption`.
 - **Case-insensitive canonicalization** — input that case-insensitively equals a list entry is
   stored with the list's canonical spelling. Typing `retirement` saves `Retirement`. This is
   applied in one place, the `onChange`/`onBlur` commit path that writes to Formik, so both

@@ -78,7 +78,7 @@ Do not reorder or re-capitalize the entries.
 Run: `npx tsc --noEmit -p tsconfig.json`
 Expected: no errors referencing `constant.ts`.
 
-Note: this project has pre-existing type errors in unrelated files. Only confirm that no *new* error mentions `constant.ts`.
+Note, corrected after execution: this project's `tsc` passes with ZERO errors. The plan originally assumed pre-existing unrelated type errors; that was wrong. Treat any type error as new and fix it.
 
 - [ ] **Step 3: Commit**
 
@@ -296,6 +296,16 @@ import {
 ```
 
 - [ ] **Step 2: Replace the field**
+
+> **Corrected after execution — the code below is WRONG as written.** It uses a string
+> sentinel `Add "<text>"` and relies on `getOptionLabel` to strip it before the value reaches
+> Formik. `getOptionLabel` does not do that: MUI's `handleOptionClick` passes the raw option to
+> `selectNewValue`, which assigns it unchanged. The result was a silent persistence bug — the
+> input displayed `Moving abroad` while Formik stored `Add "Moving abroad"`. The shipped code
+> (commit `f146bbd0`) uses a sentinel **object** `{ addCustom: true, value }`, branches on its
+> type in `onChange` to extract `value`, and keeps the `Add "…"` wording display-only via
+> `renderOption`. Read `JobInfo.tsx` for the correct implementation; the block below is retained
+> only as the historical record of what was planned.
 
 Replace the whole `<TextField ... name="resignationReason" ... />` block (lines 1883-1903, the `<Grid item>` contents) with:
 
