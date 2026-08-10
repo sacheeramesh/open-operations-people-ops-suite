@@ -19,6 +19,8 @@
 - Use path aliases (`@config/`, `@utils/`, `@slices/`, `@view/`), never relative `../../` imports, per the project CLAUDE.md. **One exception:** Jest resolves no aliases in this project (`config-overrides.js` aliases webpack only, and there is no `moduleNameMapper`), so the test file and the helper module it loads use relative imports. Everything else, including `JobInfo.tsx`, uses aliases.
 - All new files need the standard WSO2 Apache-2.0 copyright header, copied verbatim from the top of `webapp/src/view/employees/onboarding/singleOnboarding/steps/JobInfo.tsx` (lines 1-15), with the year `2026`.
 - Run all commands from `apps/people-app/webapp/`.
+- **Formik validation:** the enclosing form sets `validateOnChange={false}` and `validateOnBlur={true}` (`src/view/employees/onboarding/EmployeeForm.tsx:861-862`). Every `setFieldValue("resignationReason", …)` in Task 4 MUST pass `true` as the third argument (`shouldValidate`), or the required-field error never recomputes as the user types. Nearby fields in this file omit that argument — do not copy them; the third argument is load-bearing here and must not be removed for consistency with neighbouring code.
+- **Staging:** the working tree has unrelated modifications in `backend/Dependencies.toml` and `webapp/src/utils/apiService.ts`. Stage only the exact files each task names — use path-scoped `git add <path>`. Never run `git add -A`, `git add .`, or `git commit -am`.
 - This webapp currently has **zero test files**. Task 2 introduces the first one. Do not add render/component tests — only pure-function unit tests.
 
 ---
