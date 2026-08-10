@@ -205,6 +205,27 @@ export default function EmployeesTable() {
       ),
     },
     {
+      field: "externalDesignation",
+      headerName: "External Designation",
+      flex: 0.9,
+      minWidth: 150,
+      resizable: false,
+      renderCell: (params: GridRenderCellParams<Employee>) => (
+        <Tooltip title={params.value || "N/A"} arrow>
+          <Box
+            sx={{
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              color: theme.palette.text.primary,
+            }}
+          >
+            {params.value || "N/A"}
+          </Box>
+        </Tooltip>
+      ),
+    },
+    {
       field: "startDate",
       headerName: "Start Date",
       width: 120,

@@ -200,6 +200,20 @@ export default function MyTeamTable() {
         ),
       },
       {
+        field: "externalDesignation",
+        headerName: "External Designation",
+        flex: 0.8,
+        minWidth: 140,
+        resizable: false,
+        renderCell: (params: GridRenderCellParams<Employee>) => (
+          <Tooltip title={params.value || "N/A"} arrow>
+            <Box sx={{ overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", color: theme.palette.text.primary }}>
+              {params.value || "N/A"}
+            </Box>
+          </Tooltip>
+        ),
+      },
+      {
         field: "employmentType",
         headerName: "Employment Type",
         flex: 0.8,

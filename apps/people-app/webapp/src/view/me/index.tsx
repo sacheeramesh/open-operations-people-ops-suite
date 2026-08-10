@@ -793,6 +793,16 @@ export default function Me({
                     {designationText}
                   </Typography>
                 </Grid>
+                {employee?.externalDesignation && (
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Typography color="text.secondary" sx={{ fontWeight: 500 }}>
+                      External Designation
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      {employee.externalDesignation}
+                    </Typography>
+                  </Grid>
+                )}
                 <Grid item xs={12} sm={6} md={3}>
                   <Typography color="text.secondary" sx={{ fontWeight: 500 }}>
                     Job Band
