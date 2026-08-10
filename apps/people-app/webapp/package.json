@@ -1,6 +1,6 @@
 {
   "name": "people_app",
-  "version": "1.0.0",
+  "version": "1.0.22",
   "private": true,
   "dependencies": {
     "@asgardeo/auth-react": "5.1.2",
