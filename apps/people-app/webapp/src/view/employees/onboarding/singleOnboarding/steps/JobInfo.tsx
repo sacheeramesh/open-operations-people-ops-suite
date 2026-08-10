@@ -36,6 +36,7 @@ import {
   Stack,
   InputAdornment,
   IconButton,
+  Autocomplete,
 } from "@mui/material";
 import { useFormikContext } from "formik";
 import * as Yup from "yup";
@@ -49,6 +50,11 @@ import {
 } from "@slices/employeeSlice/employee";
 import { EmployeeStatus } from "@/types/types";
 import { sortAndFormatOptions } from "@utils/utils";
+import { ResignationReasons } from "@config/constant";
+import {
+  canonicalizeReason,
+  shouldOfferCustomReason,
+} from "@view/employees/onboarding/singleOnboarding/steps/resignationReason.utils";
 import {
   fetchBusinessUnits,
   fetchTeams,
@@ -1874,23 +1880,70 @@ export default function JobInfoStep({ isEditMode }: { isEditMode: boolean }) {
               />
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
-              <TextField
-                fullWidth
-                label="Reason for Leaving"
-                name="resignationReason"
+              <Autocomplete
+                freeSolo
                 disabled={!isLeaverStatus}
+                options={ResignationReasons}
                 value={values.resignationReason ?? ""}
-                onChange={(e) =>
+                // A stored reason that predates this list stays editable as typed
+                // text; admins are not forced to re-pick one from the list.
+                onChange={(_event, newValue) =>
                   setFieldValue(
                     "resignationReason",
-                    e.target.value || null,
+                    canonicalizeReason(
+                      typeof newValue === "string" ? newValue : null,
+                    ),
+                    true,
                   )
                 }
-                onBlur={handleBlur}
-                error={Boolean(touched.resignationReason && errors.resignationReason)}
-                helperText={touched.resignationReason && errors.resignationReason ? errors.resignationReason : undefined}
-                inputProps={{ maxLength: 300 }}
-                sx={textFieldSx}
+                onInputChange={(_event, newInputValue, changeReason) => {
+                  // Ignore the reset MUI fires while committing a selection; onChange
+                  // already stored the canonical value for that path.
+                  if (changeReason === "reset") return;
+                  setFieldValue("resignationReason", newInputValue || null, true);
+                }}
+                onBlur={(event) => {
+                  setFieldValue(
+                    "resignationReason",
+                    canonicalizeReason(values.resignationReason ?? null),
+                    true,
+                  );
+                  handleBlur(event);
+                }}
+                filterOptions={(options, state) => {
+                  const input = state.inputValue;
+                  const filtered = options.filter((option) =>
+                    option.toLowerCase().includes(input.trim().toLowerCase()),
+                  );
+                  // Make off-list entry deliberate: a half-typed option like "Retire"
+                  // gets an explicit Add row rather than being silently saved.
+                  if (shouldOfferCustomReason(input)) {
+                    filtered.push(`Add "${input.trim()}"`);
+                  }
+                  return filtered;
+                }}
+                // The Add row carries its label as its value, so strip the wrapper
+                // before it reaches Formik.
+                getOptionLabel={(option) => {
+                  const match = /^Add "(.*)"$/.exec(option);
+                  return match ? match[1] : option;
+                }}
+                renderInput={(params) => (
+                  <TextField
+                    {...params}
+                    fullWidth
+                    label="Reason for Leaving"
+                    name="resignationReason"
+                    error={Boolean(touched.resignationReason && errors.resignationReason)}
+                    helperText={
+                      touched.resignationReason && errors.resignationReason
+                        ? errors.resignationReason
+                        : "Select a reason or type a custom one"
+                    }
+                    inputProps={{ ...params.inputProps, maxLength: 300 }}
+                    sx={textFieldSx}
+                  />
+                )}
               />
             </Grid>
           </Grid>
