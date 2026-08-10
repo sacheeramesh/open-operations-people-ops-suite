@@ -424,6 +424,12 @@ export default function ReviewStep({ isEditMode }: ReviewStepProps) {
           <Grid item xs={12} sm={6} md={4}>
             <ReviewField label="Job Role" value={values.jobRole} />
           </Grid>
+          <Grid item xs={12} sm={6} md={4}>
+            <ReviewField
+              label="External Designation"
+              value={values.externalDesignation}
+            />
+          </Grid>
         </Grid>
       </Box>
 

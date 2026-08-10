@@ -143,6 +143,12 @@ export const createJobInfoValidationSchema = (
       .max(100, "Job role must be at most 100 characters")
       .transform((value) => (value === "" ? null : value))
       .nullable(),
+    externalDesignation: Yup.string()
+      .max(100, "External designation must be at most 100 characters")
+      .transform((value) =>
+        typeof value === "string" && value.trim() === "" ? null : value,
+      )
+      .nullable(),
     companyId: Yup.number()
       .required("Company is required")
       .min(1, "Select a valid company"),
@@ -1321,6 +1327,24 @@ export default function JobInfoStep({ isEditMode }: { isEditMode: boolean }) {
                 touched.secondaryJobTitle && errors.secondaryJobTitle,
               )}
               helperText={touched.secondaryJobTitle && errors.secondaryJobTitle}
+              sx={textFieldSx}
+            />
+          </Grid>
+          <Grid item xs={12} sm={6} md={3}>
+            <TextField
+              fullWidth
+              label="External Designation"
+              name="externalDesignation"
+              value={values.externalDesignation ?? ""}
+              onChange={handleChange}
+              onBlur={handleBlur}
+              error={Boolean(
+                touched.externalDesignation && errors.externalDesignation,
+              )}
+              helperText={
+                touched.externalDesignation && errors.externalDesignation
+              }
+              inputProps={{ maxLength: 100 }}
               sx={textFieldSx}
             />
           </Grid>
