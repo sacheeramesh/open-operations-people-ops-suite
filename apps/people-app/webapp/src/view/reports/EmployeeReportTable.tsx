@@ -174,6 +174,11 @@ function getColumnDefs(theme: Theme): Record<string, GridColDef<Employee>> {
         <TextCell value={String(params.value ?? "")} />
       ),
     },
+    externalDesignation: textCol(
+      "externalDesignation",
+      "External Designation",
+      180,
+    ),
     jobBand: {
       field: "jobBand",
       headerName: "Job Band",

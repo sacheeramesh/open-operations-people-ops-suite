@@ -38,6 +38,7 @@ export const EMPLOYEE_COLUMNS: ColumnDef[] = [
   { key: "location",              label: "Location",                group: "Job & Career" },
   { key: "employmentType",        label: "Employment Type",         group: "Job & Career" },
   { key: "jobRole",               label: "Job Role",                group: "Job & Career" },
+  { key: "externalDesignation",   label: "External Designation",    group: "Job & Career" },
   { key: "jobBand",               label: "Job Band",                group: "Job & Career" },
   { key: "employeeStatus",        label: "Employee Status",         group: "Job & Career" },
   { key: "office",                label: "Office",                  group: "Job & Career" },
