@@ -34,6 +34,7 @@ export interface Employee {
   employeeThumbnail: string | null;
   secondaryJobTitle: string | null;
   jobRole: string | null;
+  externalDesignation: string | null;
   epf: string;
   workLocation: string;
   startDate: string;
@@ -182,6 +183,7 @@ export type CreateEmployeePayload = {
   epf?: string;
   secondaryJobTitle?: string;
   jobRole?: string | null;
+  externalDesignation?: string | null;
   workLocation: string;
   workEmail: string;
   startDate: string;
@@ -218,6 +220,7 @@ export type UpdateEmployeeJobInfoPayload = {
   startDate?: string;
   secondaryJobTitle?: string;
   jobRole?: string | null;
+  externalDesignation?: string | null;
   managerEmail?: string;
   additionalManagerEmails?: string[];
   employeeThumbnail?: string | null;
