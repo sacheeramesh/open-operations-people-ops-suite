@@ -82,6 +82,8 @@ public type EmployeeBasicInfo record {|
     string? employeeThumbnail;
     # Combined designation (designation + job role + secondary job title)
     string designation?;
+    # External-facing designation
+    string? externalDesignation?;
 |};
 
 # User information with privileges.
@@ -184,6 +186,8 @@ public type Employee record {|
     string? secondaryJobTitle;
     # Job role
     string? jobRole;
+    # External-facing designation
+    string? externalDesignation;
     # Office
     string? office;
     # Office ID
@@ -846,6 +850,8 @@ public type CreateEmployeePayload record {|
     # Job role
     @constraint:String {maxLength: 100}
     string? jobRole = ();
+    # External-facing designation
+    string? externalDesignation = ();
     # Manager email
     @constraint:String {maxLength: 254, pattern: re `${EMAIL_PATTERN}`}
     string managerEmail;
@@ -967,6 +973,8 @@ public type UpdateEmployeeJobInfoPayload record {|
     # Job role
     @constraint:String {maxLength: 100}
     string? jobRole = ();
+    # External-facing designation
+    string? externalDesignation = ();
     # Manager email
     @constraint:String {maxLength: 254, pattern: re `${EMAIL_PATTERN}`}
     string? managerEmail = ();

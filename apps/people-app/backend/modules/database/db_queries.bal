@@ -32,7 +32,8 @@ isolated function getEmployeeBasicInfoQuery(string email) returns sql:Parameteri
                 THEN CONCAT(' ', TRIM(e.secondary_job_title)) ELSE '' END,
             CASE WHEN NULLIF(TRIM(e.job_role), '') IS NOT NULL
                 THEN CONCAT(' & ', TRIM(e.job_role)) ELSE '' END
-        ) AS designation
+        ) AS designation,
+        e.external_designation AS externalDesignation
     FROM employee e
         INNER JOIN designation d ON e.designation_id = d.id
     WHERE e.work_email = ${email};`;
@@ -46,7 +47,8 @@ isolated function getAllEmployeesBasicInfoQuery() returns sql:ParameterizedQuery
         first_name,
         last_name,
         work_email,
-        employee_thumbnail
+        employee_thumbnail,
+        external_designation AS externalDesignation
     FROM employee
     WHERE employee_status = 'Active';`;
 
@@ -153,6 +155,7 @@ isolated function getEmployeeInfoQuery(string employeeId) returns sql:Parameteri
         d.job_band AS jobBand,
         e.secondary_job_title AS secondaryJobTitle,
         e.job_role AS jobRole,
+        e.external_designation AS externalDesignation,
         o.name AS office,
         e.office_id AS officeId,
         bu.name AS businessUnit,
@@ -238,6 +241,7 @@ isolated function getEmployeesQuery(EmployeeSearchPayload payload, string? leadE
             d.job_band AS jobBand,
             e.secondary_job_title AS secondaryJobTitle,
             e.job_role AS jobRole,
+            e.external_designation AS externalDesignation,
             o.name AS office,
             e.office_id AS officeId,
             bu.name AS businessUnit,
@@ -1416,6 +1420,7 @@ isolated function addEmployeeQuery(CreateEmployeePayload payload, string created
             start_date,
             secondary_job_title,
             job_role,
+            external_designation,
             manager_email,
             employee_status,
             continuous_service_record,
@@ -1446,6 +1451,7 @@ isolated function addEmployeeQuery(CreateEmployeePayload payload, string created
             ${payload.startDate},
             ${payload.secondaryJobTitle},
             ${payload.jobRole},
+            ${payload.externalDesignation},
             ${payload.managerEmail},
             ${payload.employeeStatus},
             ${payload.continuousServiceRecord},
@@ -1712,6 +1718,14 @@ isolated function updateEmployeeJobInfoQuery(string employeeId, UpdateEmployeeJo
             updates.push(`job_role = NULL`);
         } else {
             updates.push(`job_role = ${payload.jobRole}`);
+        }
+    }
+
+    if payload.externalDesignation is string {
+        if payload.externalDesignation == "" {
+            updates.push(`external_designation = NULL`);
+        } else {
+            updates.push(`external_designation = ${payload.externalDesignation}`);
         }
     }
 
