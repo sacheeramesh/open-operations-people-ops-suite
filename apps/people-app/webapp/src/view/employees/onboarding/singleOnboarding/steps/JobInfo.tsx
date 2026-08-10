@@ -82,6 +82,15 @@ import {
 } from "@mui/icons-material";
 import dayjs from "dayjs";
 
+// Sentinel for the synthetic "Add "<text>"" row offered by the resignation-reason
+// Autocomplete's filterOptions. It is a distinct OBJECT type (not a string) so it
+// can never collide with real user-typed text, unlike a string-based marker such
+// as `Add "${input}"`, which a literal user string could reproduce.
+interface AddCustomReasonOption {
+  addCustom: true;
+  value: string;
+}
+
 const SECTION_ICONS = {
   badge: <BadgeOutlined />,
   work: <WorkOutline />,
@@ -1880,22 +1889,26 @@ export default function JobInfoStep({ isEditMode }: { isEditMode: boolean }) {
               />
             </Grid>
             <Grid item xs={12} sm={6} md={4}>
-              <Autocomplete
+              <Autocomplete<string | AddCustomReasonOption, false, false, true>
                 freeSolo
                 disabled={!isLeaverStatus}
                 options={ResignationReasons}
                 value={values.resignationReason ?? ""}
                 // A stored reason that predates this list stays editable as typed
                 // text; admins are not forced to re-pick one from the list.
-                onChange={(_event, newValue) =>
-                  setFieldValue(
-                    "resignationReason",
-                    canonicalizeReason(
-                      typeof newValue === "string" ? newValue : null,
-                    ),
-                    true,
-                  )
-                }
+                onChange={(_event, newValue) => {
+                  // newValue is a plain string for a predefined pick or a
+                  // freeSolo Enter-key commit, or the Add-row sentinel object
+                  // when that synthetic row is clicked. The sentinel itself
+                  // must never reach Formik — only its clean `value` may.
+                  const raw =
+                    typeof newValue === "string"
+                      ? newValue
+                      : newValue
+                        ? newValue.value
+                        : null;
+                  setFieldValue("resignationReason", canonicalizeReason(raw), true);
+                }}
                 onInputChange={(_event, newInputValue, changeReason) => {
                   // Ignore the reset MUI fires while committing a selection; onChange
                   // already stored the canonical value for that path.
@@ -1910,23 +1923,39 @@ export default function JobInfoStep({ isEditMode }: { isEditMode: boolean }) {
                   );
                   handleBlur(event);
                 }}
-                filterOptions={(options, state) => {
+                filterOptions={(_options, state) => {
                   const input = state.inputValue;
-                  const filtered = options.filter((option) =>
-                    option.toLowerCase().includes(input.trim().toLowerCase()),
+                  // Filter against the predefined list directly (not the generic
+                  // `_options` param) since the Autocomplete's Value type now also
+                  // covers the non-string Add-row sentinel, which has no `.toLowerCase`.
+                  const filtered: (string | AddCustomReasonOption)[] = ResignationReasons.filter(
+                    (option) => option.toLowerCase().includes(input.trim().toLowerCase()),
                   );
                   // Make off-list entry deliberate: a half-typed option like "Retire"
-                  // gets an explicit Add row rather than being silently saved.
+                  // gets an explicit Add row rather than being silently saved. The
+                  // Add row is a sentinel OBJECT, not a string, so it can never be
+                  // confused with real user text (unlike a string-based marker,
+                  // which would collide with user text containing the same syntax).
                   if (shouldOfferCustomReason(input)) {
-                    filtered.push(`Add "${input.trim()}"`);
+                    filtered.push({ addCustom: true, value: input.trim() });
                   }
                   return filtered;
                 }}
-                // The Add row carries its label as its value, so strip the wrapper
-                // before it reaches Formik.
-                getOptionLabel={(option) => {
-                  const match = /^Add "(.*)"$/.exec(option);
-                  return match ? match[1] : option;
+                // For a real option, show it as-is. For the Add-row sentinel,
+                // show the bare custom text (not the "Add ..." wrapper) so the
+                // displayed text always matches what will be stored.
+                getOptionLabel={(option) =>
+                  typeof option === "string" ? option : option.value
+                }
+                // The visible ROW label may still read `Add "..."`; only the
+                // stored VALUE (handled in onChange/getOptionLabel) must be clean.
+                renderOption={(props, option) => {
+                  const { key, ...optionProps } = props;
+                  return (
+                    <li key={key} {...optionProps}>
+                      {typeof option === "string" ? option : `Add "${option.value}"`}
+                    </li>
+                  );
                 }}
                 renderInput={(params) => (
                   <TextField
