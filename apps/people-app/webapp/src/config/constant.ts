@@ -410,3 +410,21 @@ export const BULK_TEMPLATE_EXAMPLE_ROW = [
   "Spouse",
   "",
 ] as const;
+
+export const ResignationReasons = [
+  "Termination",
+  "Internal Transition",
+  "Personal Reasons",
+  "Migration",
+  "Joining another company - Local",
+  "Joining another company - Overseas",
+  "Higher Studies - Overseas",
+  "Mismatch in Job role",
+  "Higher Studies - Local",
+  "Decided to leave during review",
+  "Deceased",
+  "Involuntary Resignation",
+  "Moving to Part-time Consultancy",
+  "Secondment",
+  "Retirement",
+];
