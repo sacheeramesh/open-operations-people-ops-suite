@@ -851,6 +851,7 @@ public type CreateEmployeePayload record {|
     @constraint:String {maxLength: 100}
     string? jobRole = ();
     # External-facing designation
+    @constraint:String {maxLength: 100}
     string? externalDesignation = ();
     # Manager email
     @constraint:String {maxLength: 254, pattern: re `${EMAIL_PATTERN}`}
@@ -974,6 +975,7 @@ public type UpdateEmployeeJobInfoPayload record {|
     @constraint:String {maxLength: 100}
     string? jobRole = ();
     # External-facing designation
+    @constraint:String {maxLength: 100}
     string? externalDesignation = ();
     # Manager email
     @constraint:String {maxLength: 254, pattern: re `${EMAIL_PATTERN}`}
