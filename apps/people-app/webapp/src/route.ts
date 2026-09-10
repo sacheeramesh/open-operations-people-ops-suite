@@ -121,14 +121,14 @@ export const routes: RouteObjectWithRole[] = [
     text: "Employees",
     icon: React.createElement(BadgeSharp),
     element: React.createElement(EmployeesRoot),
-    allowRoles: [Role.ADMIN],
+    allowRoles: [Role.ADMIN, Role.EMPLOYEE_VIEW],
     children: [
       {
         path: "/employees/view",
         text: "All",
         element: React.createElement(View.employeesList),
         icon: React.createElement(Groups),
-        allowRoles: [Role.ADMIN],
+        allowRoles: [Role.ADMIN, Role.EMPLOYEE_VIEW],
       },
       {
         path: "/employees/my-team",
@@ -177,21 +177,21 @@ export const routes: RouteObjectWithRole[] = [
     text: "Reports",
     icon: React.createElement(AssessmentIcon),
     element: React.createElement(ReportsRoot),
-    allowRoles: [Role.ADMIN, Role.SERVICE_DESK],
+    allowRoles: [Role.ADMIN, Role.SERVICE_DESK, Role.REPORT],
     children: [
       {
         path: "/reports/active-employees",
         text: "Active Employees",
         icon: React.createElement(Groups),
         element: React.createElement(View.activeEmployeesReport),
-        allowRoles: [Role.ADMIN],
+        allowRoles: [Role.ADMIN, Role.REPORT],
       },
       {
         path: "/reports/inactive-employees",
         text: "Resignations",
         icon: React.createElement(PersonOffIcon),
         element: React.createElement(View.resignationReport),
-        allowRoles: [Role.ADMIN],
+        allowRoles: [Role.ADMIN, Role.REPORT],
       },
       {
         path: "/reports/qr-codes",
@@ -239,7 +239,7 @@ export const routes: RouteObjectWithRole[] = [
     text: "Employees",
     icon: React.createElement(GroupsIcon),
     element: React.createElement(View.employeeDetails),
-    allowRoles: [Role.ADMIN, Role.LEAD],
+    allowRoles: [Role.ADMIN, Role.LEAD, Role.EMPLOYEE_VIEW],
     hideFromSidebar: true,
   },
   {

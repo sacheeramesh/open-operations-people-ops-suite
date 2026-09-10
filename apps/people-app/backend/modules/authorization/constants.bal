@@ -23,3 +23,12 @@ public const ADMIN_PRIVILEGE = 999;
 public const EMPLOYEE_PRIVILEGE = 987;
 public const LEAD_PRIVILEGE = 993;
 public const SERVICE_DESK_PRIVILEGE = 991;
+
+# Narrow, additive privileges for delegated access. Numbered below EMPLOYEE_PRIVILEGE (987)
+# because each grants less than a general employee holds — they scope a single capability
+# rather than extending the employee baseline.
+#
+# Granted by IAM group membership, configured in `Config.toml` (see `AppRoles`).
+public const EMPLOYEE_VIEW_PRIVILEGE = 985;
+public const RESIGNATION_PRIVILEGE = 983;
+public const REPORT_PRIVILEGE = 981;

@@ -30,6 +30,14 @@ public type AppRoles record {|
     string ADMIN_ROLE;
     # Role for the service desk
     string SERVICE_DESK_ROLE;
+    # Role granting read-only access to employee records, including history and resigned
+    # employees. Excludes personal information, which stays admin/self-only.
+    string EMPLOYEE_VIEW_ROLE;
+    # Role granting update access to resignation details only, via the dedicated
+    # `PATCH employees/{id}/resignation` endpoint
+    string RESIGNATION_ROLE;
+    # Role granting employee report generation and export, with no other employee-data access
+    string REPORT_ROLE;
     # Roles for the external users(for vehicle saving purpose)
     string[] EXTERNAL_USER_ROLES = [];
 |};

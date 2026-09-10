@@ -24,6 +24,13 @@ public isolated function checkPermissions(string[] requiredRoles, string[] userR
         return false;
     }
 
+    // Every role name is required config, but Ballerina enforces only that the key exists,
+    // not that it holds a value. A role left blank in Config.toml would otherwise match a
+    // blank entry in the caller's group list and grant access to everyone carrying one.
+    if requiredRoles.some(role => role.trim() == "") {
+        return false;
+    }
+
     final string[] & readonly userRolesReadOnly = userRoles.cloneReadOnly();
     return requiredRoles.every(role => userRolesReadOnly.indexOf(role) !is ());
 }

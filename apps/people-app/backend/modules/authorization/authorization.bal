@@ -53,8 +53,14 @@ public isolated service class JwtInterceptor {
         }
 
         // Internal roles are allowed on any resource (further scoped by per-resource checks in service.bal).
-        string[] internalRoles = [authorizedRoles.EMPLOYEE_ROLE, authorizedRoles.ADMIN_ROLE,
-            authorizedRoles.SERVICE_DESK_ROLE];
+        string[] internalRoles = [
+            authorizedRoles.EMPLOYEE_ROLE,
+            authorizedRoles.ADMIN_ROLE,
+            authorizedRoles.SERVICE_DESK_ROLE,
+            authorizedRoles.EMPLOYEE_VIEW_ROLE,
+            authorizedRoles.RESIGNATION_ROLE,
+            authorizedRoles.REPORT_ROLE
+        ];
         boolean hasInternalRole = false;
         foreach string userGroup in userInfo.groups {
             if internalRoles.indexOf(userGroup) !is () {

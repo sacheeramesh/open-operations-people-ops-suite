@@ -4,6 +4,9 @@ isMaintenanceMode = false
 EMPLOYEE_ROLE = ""
 ADMIN_ROLE = ""
 SERVICE_DESK_ROLE = ""
+EMPLOYEE_VIEW_ROLE = ""
+RESIGNATION_ROLE = ""
+REPORT_ROLE = ""
 EXTERNAL_USER_ROLES = [];
 
 [people.database.dbConfig]

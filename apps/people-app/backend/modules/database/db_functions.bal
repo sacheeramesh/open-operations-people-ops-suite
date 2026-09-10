@@ -1026,6 +1026,29 @@ public isolated function updateEmployeeJobInfo(string employeeId, UpdateEmployee
     }
 }
 
+# Update an employee's resignation details only.
+#
+# Widens the narrow payload onto `UpdateEmployeeJobInfoPayload` and reuses
+# `updateEmployeeJobInfo`, so resignation columns have exactly one write path however they
+# are reached — the dedicated endpoint or an admin's combined job-info edit. Every other
+# field is left nil, so nothing outside these four can be written through this route.
+#
+# + employeeId - Employee ID
+# + payload - Resignation update payload
+# + updatedBy - Updater of the record
+# + return - Nil if the update was successful or error
+public isolated function updateEmployeeResignation(string employeeId,
+        UpdateEmployeeResignationPayload payload, string updatedBy) returns error? {
+
+    UpdateEmployeeJobInfoPayload jobInfoPayload = {
+        employeeStatus: payload.employeeStatus,
+        finalDayInOffice: payload.finalDayInOffice,
+        finalDayOfEmployment: payload.finalDayOfEmployment,
+        resignationReason: payload.resignationReason
+    };
+    return updateEmployeeJobInfo(employeeId, jobInfoPayload, updatedBy);
+}
+
 # Check whether the job-info update payload contains any leaver-specific fields.
 #
 # + payload - Job information update payload

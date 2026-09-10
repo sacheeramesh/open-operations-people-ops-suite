@@ -120,6 +120,15 @@ service http:InterceptableService / on new http:Listener(9090) {
         if authorization:checkPermissions([authorization:authorizedRoles.SERVICE_DESK_ROLE], userInfo.groups) {
             privileges.push(authorization:SERVICE_DESK_PRIVILEGE);
         }
+        if authorization:checkPermissions([authorization:authorizedRoles.EMPLOYEE_VIEW_ROLE], userInfo.groups) {
+            privileges.push(authorization:EMPLOYEE_VIEW_PRIVILEGE);
+        }
+        if authorization:checkPermissions([authorization:authorizedRoles.RESIGNATION_ROLE], userInfo.groups) {
+            privileges.push(authorization:RESIGNATION_PRIVILEGE);
+        }
+        if authorization:checkPermissions([authorization:authorizedRoles.REPORT_ROLE], userInfo.groups) {
+            privileges.push(authorization:REPORT_PRIVILEGE);
+        }
         boolean|error isLeadUser = database:isLead(userInfo.email);
         if isLeadUser is error {
             string customErr = "Error occurred while checking lead status";
@@ -213,9 +222,11 @@ service http:InterceptableService / on new http:Listener(9090) {
             };
         }
 
-        boolean hasAdminAccess = authorization:checkPermissions([authorization:authorizedRoles.ADMIN_ROLE], userInfo.groups);
+        // Admins and the delegated employee-view role may read any employee record.
+        boolean hasDirectoryAccess = authorization:checkPermissions([authorization:authorizedRoles.ADMIN_ROLE], userInfo.groups)
+            || authorization:checkPermissions([authorization:authorizedRoles.EMPLOYEE_VIEW_ROLE], userInfo.groups);
         boolean isSelf = employeeInfo != () && employeeInfo.workEmail == userInfo.email;
-        if !hasAdminAccess && !isSelf {
+        if !hasDirectoryAccess && !isSelf {
             boolean|error isSubordinate = database:isSubordinateOfLead(userInfo.email, employeeId);
             if isSubordinate is error {
                 string customErr = string `Error occurred while checking lead authorization for ID: ${employeeId}`;
@@ -434,8 +445,11 @@ service http:InterceptableService / on new http:Listener(9090) {
             };
         }
 
+        // Admins and the delegated employee-view role may run the unscoped query; everyone
+        // else is restricted to the lead-scoped path below.
         boolean hasAdminAccess
-            = authorization:checkPermissions([authorization:authorizedRoles.ADMIN_ROLE], userInfo.groups);
+            = authorization:checkPermissions([authorization:authorizedRoles.ADMIN_ROLE], userInfo.groups)
+            || authorization:checkPermissions([authorization:authorizedRoles.EMPLOYEE_VIEW_ROLE], userInfo.groups);
 
         string sortField = payload.sort.sortField;
         if !database:EmployeeSortField.hasKey(sortField) {
@@ -1672,6 +1686,112 @@ service http:InterceptableService / on new http:Listener(9090) {
         return http:OK;
     }
 
+    # Update an employee's resignation details.
+    #
+    # Narrow counterpart to the job-info PATCH, for the delegated resignation role. The payload
+    # type admits only the four resignation fields, so the permission is enforced structurally
+    # rather than by inspecting a wider payload. Admins may also use it; their combined edits
+    # continue to go through job-info.
+    #
+    # + employeeId - Employee ID
+    # + payload - Resignation update payload
+    # + return - Ok, or an error response
+    resource function patch employees/[string employeeId]/resignation(http:RequestContext ctx,
+            database:UpdateEmployeeResignationPayload payload)
+        returns http:Ok|http:NotFound|http:Forbidden|http:BadRequest|http:InternalServerError {
+
+        authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
+        if userInfo is error {
+            return <http:InternalServerError>{
+                body: {
+                    message: ERROR_USER_INFORMATION_HEADER_NOT_FOUND
+                }
+            };
+        }
+
+        if !authorization:checkPermissions([authorization:authorizedRoles.ADMIN_ROLE], userInfo.groups)
+                && !authorization:checkPermissions([authorization:authorizedRoles.RESIGNATION_ROLE], userInfo.groups) {
+            log:printWarn("User is not authorized to update resignation details", invokerEmail = userInfo.email);
+            return <http:Forbidden>{
+                body: {
+                    message: "You are not authorized to update resignation details"
+                }
+            };
+        }
+
+        database:Employee|error? employeeInfo = database:getEmployeeInfo(employeeId);
+        if employeeInfo is error {
+            string customErr = string `Error occurred while fetching employee information for ID: ${employeeId}`;
+            log:printError(customErr, employeeInfo, employeeId = employeeId);
+            return <http:InternalServerError>{
+                body: {
+                    message: ERROR_EMPLOYEE_INFO_UPDATE_FAILED
+                }
+            };
+        }
+        if employeeInfo is () {
+            log:printWarn("Employee information not found", employeeId = employeeId);
+            return <http:NotFound>{
+                body: {
+                    message: "Employee information not found"
+                }
+            };
+        }
+
+        // Same two rules the job-info path enforces, so this route cannot be used to reach a
+        // state that one rejects: resignation details belong only to a leaver, and a leaver
+        // status requires all three details in the same request.
+        boolean isLeaverStatus = payload.employeeStatus is ()
+            ? employeeInfo.employeeStatus == database:EMPLOYEE_LEFT
+                || employeeInfo.employeeStatus == database:EMPLOYEE_MARKED_LEAVER
+            : payload.employeeStatus == database:EMPLOYEE_LEFT
+                || payload.employeeStatus == database:EMPLOYEE_MARKED_LEAVER;
+
+        boolean hasResignationFields = payload.finalDayInOffice is string
+            || payload.finalDayOfEmployment is string
+            || payload.resignationReason is string;
+
+        if hasResignationFields && !isLeaverStatus {
+            log:printWarn("Attempt to set resignation fields on an employee who is not a leaver",
+                    employeeId = employeeId);
+            return <http:BadRequest>{
+                body: {
+                    message: "Resignation details can only be set when employee status is 'Left' or 'Marked leaver'"
+                }
+            };
+        }
+
+        if isLeaverStatus {
+            string? payloadFinalDayInOffice = payload.finalDayInOffice;
+            string? payloadFinalDayOfEmployment = payload.finalDayOfEmployment;
+            string? payloadResignationReason = payload.resignationReason;
+
+            if payloadFinalDayInOffice is () || payloadFinalDayOfEmployment is ()
+                || payloadResignationReason is () || payloadResignationReason.trim().length() == 0 {
+                log:printWarn("Attempt to set status to Marked leaver/Left without all resignation details in the request",
+                        employeeId = employeeId);
+                return <http:BadRequest>{
+                    body: {
+                        message: "Final day in office, final day of employment, and resignation reason must all be provided in the request when status is 'Marked leaver' or 'Left'"
+                    }
+                };
+            }
+        }
+
+        error? updateResult = database:updateEmployeeResignation(employeeId, payload, userInfo.email);
+        if updateResult is error {
+            string customErr = string `Error occurred while updating resignation details for ID: ${employeeId}`;
+            log:printError(customErr, updateResult, employeeId = employeeId);
+            return <http:InternalServerError>{
+                body: {
+                    message: ERROR_EMPLOYEE_INFO_UPDATE_FAILED
+                }
+            };
+        }
+
+        return http:OK;
+    }
+
     # Fetch vehicles of a specific employee.
     #
     # + employeeEmail - The email of the employee  
@@ -2180,7 +2300,10 @@ service http:InterceptableService / on new http:Listener(9090) {
                 body: {message: ERROR_USER_INFORMATION_HEADER_NOT_FOUND}
             };
         }
-        if !authorization:checkPermissions([authorization:authorizedRoles.ADMIN_ROLE], userInfo.groups) {
+        // Admins and the delegated report role may generate reports. The report role grants
+        // nothing else — it cannot read employee records through the other endpoints.
+        if !authorization:checkPermissions([authorization:authorizedRoles.ADMIN_ROLE], userInfo.groups)
+                && !authorization:checkPermissions([authorization:authorizedRoles.REPORT_ROLE], userInfo.groups) {
             log:printWarn("User is not authorized to access reports", invokerEmail = userInfo.email);
             return <http:Forbidden>{
                 body: {message: "You are not authorized to access reports"}
@@ -3215,13 +3338,17 @@ service http:InterceptableService / on new http:Listener(9090) {
         // Access and projection are one decision, carried by one variable, so a caller can never
         // be granted access under one tier and then filtered under another.
         //
-        // - ADMIN, and a LEAD viewing their own subordinate, get the full projection:
-        //   attribution and system rows included. A lead can already see a subordinate's
-        //   designation, manager, status and dates through the sibling employee endpoint;
-        //   history adds only *when* those changed, so withholding it would be inconsistent.
+        // - ADMIN, the delegated EMPLOYEE_VIEW role, and a LEAD viewing their own subordinate,
+        //   get the full projection: attribution and system rows included. A lead can already
+        //   see a subordinate's designation, manager, status and dates through the sibling
+        //   employee endpoint; history adds only *when* those changed, so withholding it would
+        //   be inconsistent. EMPLOYEE_VIEW is an admin-delegated read role over the same
+        //   records, so it reads history on the same terms.
         // - Self gets the employee projection: no actionBy, no system rows.
         boolean hasFullProjection = authorization:checkPermissions(
-                [authorization:authorizedRoles.ADMIN_ROLE], userInfo.groups);
+                    [authorization:authorizedRoles.ADMIN_ROLE], userInfo.groups)
+                || authorization:checkPermissions(
+                    [authorization:authorizedRoles.EMPLOYEE_VIEW_ROLE], userInfo.groups);
 
         if !hasFullProjection {
             // Two conditions, and both are required.

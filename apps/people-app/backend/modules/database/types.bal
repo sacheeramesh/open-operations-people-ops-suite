@@ -1147,6 +1147,25 @@ public type UpdateEmployeeJobInfoPayload record {|
     string? resignationReason = ();
 |};
 
+# [Database] Update type for an employee's resignation details only.
+#
+# Deliberately narrow: the delegated resignation role may write these fields and nothing
+# else, and that boundary is enforced by this type rather than by a runtime check over the
+# ~25-field job-info payload. Writes go through the same `updateEmployeeJobInfo` path, so
+# validation cannot drift between the two routes.
+public type UpdateEmployeeResignationPayload record {|
+    # Employee Status
+    EmployeeStatus? employeeStatus = ();
+    # Final day in office
+    @constraint:String {pattern: re `${DATE_PATTERN}`}
+    string? finalDayInOffice = ();
+    # Final day of employment
+    @constraint:String {pattern: re `${DATE_PATTERN}`}
+    string? finalDayOfEmployment = ();
+    # Resignation reason
+    string? resignationReason = ();
+|};
+
 # [Database] Insert type for vehicle.
 public type AddVehiclePayload record {|
     # Owner of the vehicle
