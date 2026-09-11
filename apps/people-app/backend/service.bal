@@ -400,8 +400,12 @@ service http:InterceptableService / on new http:Listener(9090) {
             };
         }
 
+        // The employee-view and report roles both need this to populate the manager filter on
+        // the employee and report screens.
         boolean hasAdminAccess
-            = authorization:checkPermissions([authorization:authorizedRoles.ADMIN_ROLE], userInfo.groups);
+            = authorization:checkPermissions([authorization:authorizedRoles.ADMIN_ROLE], userInfo.groups)
+            || authorization:checkPermissions([authorization:authorizedRoles.EMPLOYEE_VIEW_ROLE], userInfo.groups)
+            || authorization:checkPermissions([authorization:authorizedRoles.REPORT_ROLE], userInfo.groups);
 
         if !hasAdminAccess {
             boolean|error isLeadUser = database:isLead(userInfo.email);
@@ -445,11 +449,15 @@ service http:InterceptableService / on new http:Listener(9090) {
             };
         }
 
-        // Admins and the delegated employee-view role may run the unscoped query; everyone
-        // else is restricted to the lead-scoped path below.
+        // Admins, the delegated employee-view role, and the report role may run the unscoped
+        // query; everyone else is restricted to the lead-scoped path below. The report role
+        // needs it because the report screens read this endpoint for their preview table and
+        // total count — it can already export the same rows via reports/employees/generate,
+        // so reading them here grants nothing further.
         boolean hasAdminAccess
             = authorization:checkPermissions([authorization:authorizedRoles.ADMIN_ROLE], userInfo.groups)
-            || authorization:checkPermissions([authorization:authorizedRoles.EMPLOYEE_VIEW_ROLE], userInfo.groups);
+            || authorization:checkPermissions([authorization:authorizedRoles.EMPLOYEE_VIEW_ROLE], userInfo.groups)
+            || authorization:checkPermissions([authorization:authorizedRoles.REPORT_ROLE], userInfo.groups);
 
         string sortField = payload.sort.sortField;
         if !database:EmployeeSortField.hasKey(sortField) {
