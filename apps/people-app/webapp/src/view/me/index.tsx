@@ -926,7 +926,7 @@ export default function Me({
           }}
         >
           <Typography variant="h5" sx={{ fontWeight: 600 }}>
-            General Information
+            Employment Information
           </Typography>
         </AccordionSummary>
         <AccordionDetails>
@@ -1302,7 +1302,7 @@ export default function Me({
             </Box>
           ) : (
             <Typography color="text.secondary">
-              General information not found.
+              Employment information not found.
             </Typography>
           )}
         </AccordionDetails>
