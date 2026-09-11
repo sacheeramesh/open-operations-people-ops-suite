@@ -166,14 +166,18 @@ const FieldInput = ({
 };
 
 /**
- * Tinted strip across the foot of the profile header carrying a departing employee's
- * last day in office and final day of employment.
+ * The "Resignation Details" section: resignation date, last day in office, final day
+ * of employment and reason.
  *
- * Renders only for Left and Marked leaver — an active employee has no departure dates, so
- * the band's presence is itself the signal. A missing date is omitted rather than shown as
- * a dash, and the band is skipped entirely when neither date is set.
+ * A top-level collapsible section sitting between General and Personal Information,
+ * mirroring the grouping and title of the edit form's Resignation Details section so
+ * the four fields that are edited together are also read together.
+ *
+ * Renders only for Left and Marked leaver, and only once at least one field is set —
+ * an active employee has no resignation record, so the section's presence is itself
+ * the signal. A missing individual field within a shown section is rendered as a dash.
  */
-const DepartureBand = ({ employee }: { employee: Employee | null }) => {
+const ResignationDetails = ({ employee }: { employee: Employee | null }) => {
   const theme = useTheme();
   const status = employee?.employeeStatus;
 
@@ -184,85 +188,103 @@ const DepartureBand = ({ employee }: { employee: Employee | null }) => {
     return null;
   }
 
+  const hasAnyDetail = Boolean(
+    employee.resignationDate ||
+    employee.finalDayInOffice ||
+    employee.finalDayOfEmployment ||
+    employee.resignationReason,
+  );
+
+  if (!hasAnyDetail) return null;
+
+  // Only the two forward-looking dates carry a "in N days" hint; the resignation date
+  // is when notice was given and is always in the past.
   const dates = [
-    { label: "Last day in office", value: employee.finalDayInOffice },
-    { label: "Final day of employment", value: employee.finalDayOfEmployment },
-  ].filter((date) => Boolean(date.value));
-
-  if (dates.length === 0) return null;
-
-  const mainColor =
-    status === EmployeeStatus.MarkedLeaver
-      ? theme.palette.warning.main
-      : theme.palette.error.main;
+    {
+      label: "Resignation Date",
+      value: employee.resignationDate,
+      countdown: false,
+    },
+    {
+      label: "Last Day in Office",
+      value: employee.finalDayInOffice,
+      countdown: true,
+    },
+    {
+      label: "Final Day of Employment",
+      value: employee.finalDayOfEmployment,
+      countdown: true,
+    },
+  ];
 
   return (
-    <Box
+    <Accordion
+      defaultExpanded
       sx={{
-        display: "flex",
-        flexWrap: "wrap",
-        alignItems: "center",
-        gap: 3.25,
-        // The header Paper paints a radial gradient over inset: 0 via &:after; sit above it
-        // so the band's own tint reads cleanly.
-        position: "relative",
-        zIndex: 1,
-        // Bleed out to the header Paper's edges, cancelling its responsive padding so the
-        // band spans full width. The Paper clips its own radius via overflow: hidden.
-        mt: { xs: 2, sm: 2.5 },
-        mx: { xs: -2.25, sm: -3.25 },
-        mb: { xs: -2.25, sm: -3.25 },
-        px: { xs: 2.25, sm: 3.25 },
-        py: 1.5,
-        borderTop: `1px solid ${alpha(theme.palette.divider, 0.5)}`,
-        borderLeft: `3px solid ${mainColor}`,
-        backgroundColor: alpha(
-          mainColor,
-          theme.palette.mode === "dark" ? 0.12 : 0.08,
-        ),
+        borderRadius: 2,
+        mb: 2,
+        boxShadow: 0,
+        border: 1,
+        borderColor: "divider",
       }}
     >
-      {dates.map((date) => {
-        const daysUntil = formatDaysUntil(date.value);
-        return (
-          <Box key={date.label}>
-            <Typography
-              sx={{
-                fontSize: 11,
-                fontWeight: 500,
-                letterSpacing: "0.06em",
-                textTransform: "uppercase",
-                color: theme.palette.text.secondary,
-              }}
-            >
-              {date.label}
-            </Typography>
-            <Typography
-              sx={{
-                fontSize: 14.5,
-                fontWeight: 600,
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {formatDate(date.value, "-")}
-              {daysUntil && (
-                <Box
-                  component="span"
-                  sx={{
-                    ml: 0.75,
-                    fontSize: 12.5,
-                    fontWeight: 400,
-                    color: theme.palette.text.secondary,
-                  }}
+      <AccordionSummary
+        expandIcon={<ExpandMoreIcon />}
+        sx={{ borderRadius: 2, backgroundColor: "background.paper" }}
+      >
+        <Typography variant="h5" sx={{ fontWeight: 600 }}>
+          Resignation Details
+        </Typography>
+      </AccordionSummary>
+      <AccordionDetails>
+        <Grid container rowSpacing={1.5} columnSpacing={3}>
+          {dates.map((date) => {
+            const daysUntil = date.countdown
+              ? formatDaysUntil(date.value)
+              : null;
+            return (
+              <Grid item xs={12} sm={6} md={3} key={date.label}>
+                <Typography color="text.secondary" sx={{ fontWeight: 500 }}>
+                  {date.label}
+                </Typography>
+                <Typography
+                  variant="h6"
+                  sx={{ fontWeight: 600, fontVariantNumeric: "tabular-nums" }}
                 >
-                  {daysUntil}
-                </Box>
-              )}
+                  {formatDate(date.value, "-")}
+                  {daysUntil && (
+                    <Box
+                      component="span"
+                      sx={{
+                        ml: 0.75,
+                        fontSize: 12.5,
+                        fontWeight: 400,
+                        color: theme.palette.text.secondary,
+                      }}
+                    >
+                      {daysUntil}
+                    </Box>
+                  )}
+                </Typography>
+              </Grid>
+            );
+          })}
+          <Grid item xs={12} sm={6} md={3}>
+            <Typography color="text.secondary" sx={{ fontWeight: 500 }}>
+              Resignation Reason
             </Typography>
-          </Box>
-        );
-      })}
-    </Box>
+            {/* A reason may be free text rather than one of the predefined options,
+              so it wraps instead of being clipped to one line. */}
+            <Typography
+              variant="h6"
+              sx={{ fontWeight: 600, overflowWrap: "anywhere" }}
+            >
+              {employee.resignationReason || "-"}
+            </Typography>
+          </Grid>
+        </Grid>
+      </AccordionDetails>
+    </Accordion>
   );
 };
 
@@ -827,7 +849,13 @@ export default function Me({
             sx={{ alignSelf: "center" }}
           >
             {employee && (
-              <Tooltip title={employee.house ? "View QR Code" : "QR code unavailable: no house assigned"}>
+              <Tooltip
+                title={
+                  employee.house
+                    ? "View QR Code"
+                    : "QR code unavailable: no house assigned"
+                }
+              >
                 <span>
                   <IconButton
                     color="secondary"
@@ -858,7 +886,6 @@ export default function Me({
               )}
           </Stack>
         </Stack>
-        <DepartureBand employee={employee} />
       </Paper>
       <Accordion
         defaultExpanded
@@ -1194,9 +1221,7 @@ export default function Me({
                   </Typography>
 
                   {employee.additionalManagerEmails ? (
-                    <PeopleChipList
-                      emails={employee.additionalManagerEmails}
-                    />
+                    <PeopleChipList emails={employee.additionalManagerEmails} />
                   ) : (
                     <Typography variant="h6" sx={{ fontWeight: 600 }}>
                       -
@@ -1220,6 +1245,7 @@ export default function Me({
           )}
         </AccordionDetails>
       </Accordion>
+      <ResignationDetails employee={employee} />
       {canViewPersonalInfo && (
         <Accordion
           sx={{
@@ -1528,7 +1554,10 @@ export default function Me({
                                     />
                                   </Grid>
                                   <Grid item xs={12} sm={6} md={3}>
-                                    <ReadOnly label="Mobile" value={c?.mobile} />
+                                    <ReadOnly
+                                      label="Mobile"
+                                      value={c?.mobile}
+                                    />
                                   </Grid>
                                 </Grid>
                               ))
@@ -1647,8 +1676,8 @@ export default function Me({
 
                                           <Tooltip
                                             title={
-                                              (values.emergencyContacts?.length ??
-                                                0) <= 1
+                                              (values.emergencyContacts
+                                                ?.length ?? 0) <= 1
                                                 ? "At least one emergency contact is required"
                                                 : "Remove contact"
                                             }
@@ -1696,7 +1725,8 @@ export default function Me({
                                     }}
                                     disabled={
                                       isSavingChanges ||
-                                      (values.emergencyContacts?.length ?? 0) >= 4
+                                      (values.emergencyContacts?.length ?? 0) >=
+                                        4
                                     }
                                   >
                                     Add Contact
