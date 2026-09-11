@@ -162,15 +162,16 @@ export const routes: RouteObjectWithRole[] = [
       },
     ],
   },
-  // Top-level My Team entry shown only for lead-only users (hidden when the user also has admin
-  // access, since admin+lead users see My Team nested under Employees instead).
+  // Top-level My Team entry, shown only when the Employees group is hidden — a user who can
+  // see that group already gets My Team nested inside it. excludeRoles must therefore list
+  // every role that opens the Employees group above, or the entry appears twice.
   {
     path: "/employees/my-team",
     text: "My Team",
     icon: React.createElement(PeopleAltIcon),
     element: React.createElement(View.myTeamView),
     allowRoles: [Role.LEAD],
-    excludeRoles: [Role.ADMIN],
+    excludeRoles: [Role.ADMIN, Role.EMPLOYEE_VIEW, Role.RESIGNATION],
   },
   {
     path: "/reports",
