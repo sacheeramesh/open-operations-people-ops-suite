@@ -317,21 +317,19 @@ service http:InterceptableService / on new http:Listener(9090) {
     }
 
     # Generate a QR code PNG for a single employee.
-    # Non-admins may only request their own QR code or that of a subordinate.
+    # Available to every authenticated employee for any employee. A QR code encodes only the
+    # employee number, name and house — the same identifying details colleagues can already
+    # see on a profile — so it carries nothing that warrants restricting who may render it.
     #
     # + employeeId - Employee ID to generate QR for
     # + return - PNG binary, or HTTP errors
     resource function get employees/[string employeeId]/qr\-code(http:RequestContext ctx)
-            returns byte[]|http:Forbidden|http:BadRequest|http:NotFound|http:InternalServerError {
+            returns byte[]|http:BadRequest|http:NotFound|http:InternalServerError {
 
         authorization:CustomJwtPayload|error userInfo = ctx.getWithType(authorization:HEADER_USER_INFO);
         if userInfo is error {
             return <http:InternalServerError>{body: {message: ERROR_USER_INFORMATION_HEADER_NOT_FOUND}};
         }
-
-        boolean hasQrExportAccess
-                = authorization:checkPermissions([authorization:authorizedRoles.ADMIN_ROLE], userInfo.groups)
-                || authorization:checkPermissions([authorization:authorizedRoles.SERVICE_DESK_ROLE], userInfo.groups);
 
         database:Employee|error? employee = database:getEmployeeInfo(employeeId);
         if employee is error {
@@ -341,25 +339,6 @@ service http:InterceptableService / on new http:Listener(9090) {
         }
         if employee is () {
             return <http:NotFound>{body: {message: string `Employee not found: ${employeeId}`}};
-        }
-
-        if !hasQrExportAccess {
-            boolean isSelf = employee.workEmail == userInfo.email;
-            if !isSelf {
-                boolean|error isSubordinate = database:isSubordinateOfLead(userInfo.email, employeeId);
-                if isSubordinate is error {
-                    string customErr = string `Error checking authorization for employee: ${employeeId}`;
-                    log:printError(customErr, isSubordinate, employeeId = employeeId);
-                    return <http:InternalServerError>{body: {message: customErr}};
-                }
-                if !isSubordinate {
-                    log:printWarn("User is not authorized to generate QR for this employee",
-                            invokerEmail = userInfo.email);
-                    return <http:Forbidden>{
-                        body: {message: "You are not authorized to generate a QR code for this employee"}
-                    };
-                }
-            }
         }
 
         string? house = employee.house;
