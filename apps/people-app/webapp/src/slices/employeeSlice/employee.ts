@@ -258,6 +258,18 @@ export type UpdateEmployeeJobInfoPayload = {
   resignationReason?: string | null;
 };
 
+/**
+ * Payload for the dedicated resignation endpoint. Deliberately narrow — the resignation
+ * role may write these four fields and nothing else, and the backend enforces that with
+ * this same shape rather than by inspecting the wider job-info payload.
+ */
+export type UpdateEmployeeResignationPayload = {
+  employeeStatus?: EmployeeStatus | null;
+  finalDayInOffice?: string | null;
+  finalDayOfEmployment?: string | null;
+  resignationReason?: string | null;
+};
+
 export interface ContinuousServiceRecordInfo {
   employeeId: string;
   firstName: string | null;
@@ -524,6 +536,46 @@ export const createEmployee = createAsyncThunk(
           type: "error",
         }),
       );
+      return rejectWithValue(errorMessage);
+    }
+  },
+);
+
+export const updateEmployeeResignation = createAsyncThunk(
+  "employees/updateEmployeeResignation",
+  async (
+    params: { employeeId: string; payload: UpdateEmployeeResignationPayload },
+    { dispatch, rejectWithValue },
+  ) => {
+    try {
+      await APIService.getInstance().patch(
+        AppConfig.serviceUrls.resignation(params.employeeId),
+        params.payload,
+      );
+
+      dispatch(
+        enqueueSnackbarMessage({
+          message: "Resignation details updated successfully!",
+          type: "success",
+        }),
+      );
+
+      return;
+    } catch (error: any) {
+      if (isCancel(error)) return rejectWithValue("cancelled");
+      const errorMessage =
+        error.response?.status === HttpStatusCode.InternalServerError
+          ? "Failed to update resignation details"
+          : error.response?.data?.message ||
+            "An unknown error occurred while updating resignation details.";
+
+      dispatch(
+        enqueueSnackbarMessage({
+          message: errorMessage,
+          type: "error",
+        }),
+      );
+
       return rejectWithValue(errorMessage);
     }
   },

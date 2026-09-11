@@ -222,9 +222,7 @@ service http:InterceptableService / on new http:Listener(9090) {
             };
         }
 
-        // Admins and the delegated employee-view role may read any employee record.
-        boolean hasDirectoryAccess = authorization:checkPermissions([authorization:authorizedRoles.ADMIN_ROLE], userInfo.groups)
-            || authorization:checkPermissions([authorization:authorizedRoles.EMPLOYEE_VIEW_ROLE], userInfo.groups);
+        boolean hasDirectoryAccess = authorization:hasEmployeeReadAccess(userInfo.groups);
         boolean isSelf = employeeInfo != () && employeeInfo.workEmail == userInfo.email;
         if !hasDirectoryAccess && !isSelf {
             boolean|error isSubordinate = database:isSubordinateOfLead(userInfo.email, employeeId);
@@ -379,11 +377,8 @@ service http:InterceptableService / on new http:Listener(9090) {
             };
         }
 
-        // The employee-view and report roles both need this to populate the manager filter on
-        // the employee and report screens.
-        boolean hasAdminAccess
-            = authorization:checkPermissions([authorization:authorizedRoles.ADMIN_ROLE], userInfo.groups)
-            || authorization:checkPermissions([authorization:authorizedRoles.EMPLOYEE_VIEW_ROLE], userInfo.groups)
+        // Needed to populate the manager filter on the employee and report screens.
+        boolean hasAdminAccess = authorization:hasEmployeeReadAccess(userInfo.groups)
             || authorization:checkPermissions([authorization:authorizedRoles.REPORT_ROLE], userInfo.groups);
 
         if !hasAdminAccess {
@@ -433,9 +428,7 @@ service http:InterceptableService / on new http:Listener(9090) {
         // needs it because the report screens read this endpoint for their preview table and
         // total count — it can already export the same rows via reports/employees/generate,
         // so reading them here grants nothing further.
-        boolean hasAdminAccess
-            = authorization:checkPermissions([authorization:authorizedRoles.ADMIN_ROLE], userInfo.groups)
-            || authorization:checkPermissions([authorization:authorizedRoles.EMPLOYEE_VIEW_ROLE], userInfo.groups)
+        boolean hasAdminAccess = authorization:hasEmployeeReadAccess(userInfo.groups)
             || authorization:checkPermissions([authorization:authorizedRoles.REPORT_ROLE], userInfo.groups);
 
         string sortField = payload.sort.sortField;
@@ -3325,17 +3318,14 @@ service http:InterceptableService / on new http:Listener(9090) {
         // Access and projection are one decision, carried by one variable, so a caller can never
         // be granted access under one tier and then filtered under another.
         //
-        // - ADMIN, the delegated EMPLOYEE_VIEW role, and a LEAD viewing their own subordinate,
+        // - ADMIN, the delegated employee-read roles, and a LEAD viewing their own subordinate,
         //   get the full projection: attribution and system rows included. A lead can already
         //   see a subordinate's designation, manager, status and dates through the sibling
         //   employee endpoint; history adds only *when* those changed, so withholding it would
-        //   be inconsistent. EMPLOYEE_VIEW is an admin-delegated read role over the same
-        //   records, so it reads history on the same terms.
+        //   be inconsistent. The delegated roles read the same records as an admin, so they
+        //   read history on the same terms.
         // - Self gets the employee projection: no actionBy, no system rows.
-        boolean hasFullProjection = authorization:checkPermissions(
-                    [authorization:authorizedRoles.ADMIN_ROLE], userInfo.groups)
-                || authorization:checkPermissions(
-                    [authorization:authorizedRoles.EMPLOYEE_VIEW_ROLE], userInfo.groups);
+        boolean hasFullProjection = authorization:hasEmployeeReadAccess(userInfo.groups);
 
         if !hasFullProjection {
             // Two conditions, and both are required.

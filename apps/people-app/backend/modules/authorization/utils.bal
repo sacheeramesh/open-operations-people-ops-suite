@@ -34,3 +34,20 @@ public isolated function checkPermissions(string[] requiredRoles, string[] userR
     final string[] & readonly userRolesReadOnly = userRoles.cloneReadOnly();
     return requiredRoles.every(role => userRolesReadOnly.indexOf(role) !is ());
 }
+
+# Check whether the caller may read employee records beyond their own — the employee list,
+# any individual profile, employment history and the manager filter.
+#
+# Held by ADMIN, the delegated EMPLOYEE_VIEW role, and the RESIGNATION role, which needs to
+# find an employee before it can record their resignation.
+#
+# Grouped into one predicate because these reads are always granted together: the screens
+# that use them each call several, and gating them individually is how a role ends up
+# admitted on one endpoint and rejected on the next.
+#
+# + userRoles - Groups the caller carries
+# + return - True if the caller may read employee records
+public isolated function hasEmployeeReadAccess(string[] userRoles) returns boolean =>
+    checkPermissions([authorizedRoles.ADMIN_ROLE], userRoles)
+    || checkPermissions([authorizedRoles.EMPLOYEE_VIEW_ROLE], userRoles)
+    || checkPermissions([authorizedRoles.RESIGNATION_ROLE], userRoles);

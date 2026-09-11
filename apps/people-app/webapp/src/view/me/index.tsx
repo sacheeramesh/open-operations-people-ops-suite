@@ -61,6 +61,7 @@ import {
   fetchEmployeeQrCode,
   resetEmployee,
   resetQrCode,
+  updateEmployeeResignation,
 } from "@root/src/slices/employeeSlice/employee";
 import {
   EmployeePersonalInfo,
@@ -94,6 +95,7 @@ import EmployeeHistory from "@component/employeeHistory/EmployeeHistory";
 import PeopleChip, {
   PeopleChipList,
 } from "@component/PeopleChip/PeopleChip";
+import ResignationDialog from "@component/resignation/ResignationDialog";
 
 const ReadOnly = ({
   label,
@@ -355,6 +357,8 @@ export default function Me({
   const [historyExpanded, setHistoryExpanded] = useState(false);
   const [hasExpandedHistory, setHasExpandedHistory] = useState(false);
   const [qrDialogOpen, setQrDialogOpen] = useState(false);
+  const [resignationDialogOpen, setResignationDialogOpen] = useState(false);
+  const [savingResignation, setSavingResignation] = useState(false);
   const [qrImageNaturalSize, setQrImageNaturalSize] = useState<number | null>(
     null,
   );
@@ -842,6 +846,21 @@ export default function Me({
             )}
             {readOnly &&
               targetEmployeeId &&
+              employee &&
+              !roles.includes(Role.ADMIN) &&
+              roles.includes(Role.RESIGNATION) && (
+                <Button
+                  variant="contained"
+                  color="secondary"
+                  startIcon={<PersonOffIcon />}
+                  sx={{ textTransform: "none", whiteSpace: "nowrap" }}
+                  onClick={() => setResignationDialogOpen(true)}
+                >
+                  Resignation
+                </Button>
+              )}
+            {readOnly &&
+              targetEmployeeId &&
               roles.includes(Role.ADMIN) &&
               !location.state?.fromMyTeam && (
                 <Button
@@ -860,6 +879,34 @@ export default function Me({
         </Stack>
         <DepartureBand employee={employee} />
       </Paper>
+      {employee && targetEmployeeId && (
+        <ResignationDialog
+          open={resignationDialogOpen}
+          employeeName={`${employee.firstName} ${employee.lastName}`}
+          initial={{
+            employeeStatus: employee.employeeStatus,
+            finalDayInOffice: employee.finalDayInOffice,
+            finalDayOfEmployment: employee.finalDayOfEmployment,
+            resignationReason: employee.resignationReason,
+          }}
+          saving={savingResignation}
+          onClose={() => setResignationDialogOpen(false)}
+          onSubmit={async (values) => {
+            setSavingResignation(true);
+            const result = await dispatch(
+              updateEmployeeResignation({
+                employeeId: targetEmployeeId,
+                payload: values,
+              }),
+            );
+            setSavingResignation(false);
+            if (!updateEmployeeResignation.rejected.match(result)) {
+              setResignationDialogOpen(false);
+              dispatch(fetchEmployee(targetEmployeeId));
+            }
+          }}
+        />
+      )}
       <Accordion
         defaultExpanded
         sx={{
