@@ -1259,6 +1259,46 @@ export default function Me({
                   </Typography>
                 </Grid>
               </Grid>
+              {/* Resignation details. Shown only for a leaver, so an active employee's
+                  grid is unchanged. The header band carries the two dates at a glance;
+                  this is where the resignation date and reason are readable at all. */}
+              {(employee.employeeStatus === EmployeeStatus.Left ||
+                employee.employeeStatus === EmployeeStatus.MarkedLeaver) && (
+                <Grid container rowSpacing={1.5} columnSpacing={3} mt={0.5}>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Typography color="text.secondary" sx={{ fontWeight: 500 }}>
+                      Resignation Date
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      {formatDate(employee.resignationDate, "-")}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Typography color="text.secondary" sx={{ fontWeight: 500 }}>
+                      Last Day in Office
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      {formatDate(employee.finalDayInOffice, "-")}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Typography color="text.secondary" sx={{ fontWeight: 500 }}>
+                      Final Day of Employment
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      {formatDate(employee.finalDayOfEmployment, "-")}
+                    </Typography>
+                  </Grid>
+                  <Grid item xs={12} sm={6} md={3}>
+                    <Typography color="text.secondary" sx={{ fontWeight: 500 }}>
+                      Resignation Reason
+                    </Typography>
+                    <Typography variant="h6" sx={{ fontWeight: 600 }}>
+                      {employee.resignationReason || "-"}
+                    </Typography>
+                  </Grid>
+                </Grid>
+              )}
             </Box>
           ) : (
             <Typography color="text.secondary">
