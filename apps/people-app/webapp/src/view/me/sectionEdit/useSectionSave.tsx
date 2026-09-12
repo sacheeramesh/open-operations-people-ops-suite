@@ -16,18 +16,22 @@
 
 import { useCallback, useState } from "react";
 
-import { CreateEmployeeFormValues, EmployeeStatus } from "@/types/types";
+import { Box, Typography } from "@mui/material";
+
+import { ConfirmationType, CreateEmployeeFormValues, EmployeeStatus } from "@/types/types";
+import { useConfirmationModalContext } from "@context/DialogContext";
 import {
   UpdateEmployeeJobInfoPayload,
   fetchEmployee,
   updateEmployeeJobInfo,
 } from "@slices/employeeSlice/employee";
 import { enqueueSnackbarMessage } from "@slices/commonSlice/common";
-import { useAppDispatch } from "@slices/store";
+import { useAppDispatch, useAppSelector } from "@slices/store";
 import {
   diffObject,
   toJobUpdatePayload,
 } from "@view/employees/onboarding/EmployeeForm";
+import { buildChangeSummary } from "@view/me/sectionEdit/changeSummary";
 
 /** Job-info fields belonging to each editable profile section. */
 const SECTION_FIELDS: Record<string, (keyof UpdateEmployeeJobInfoPayload)[]> = {
@@ -61,6 +65,13 @@ const SECTION_FIELDS: Record<string, (keyof UpdateEmployeeJobInfoPayload)[]> = {
   ],
 };
 
+/** Section names as they read in the confirmation dialog. */
+const SECTION_TITLES: Record<string, string> = {
+  general: "General Information",
+  resignation: "Resignation Details",
+  personal: "Personal Information",
+};
+
 /**
  * Saves a single profile section.
  *
@@ -71,6 +82,8 @@ const SECTION_FIELDS: Record<string, (keyof UpdateEmployeeJobInfoPayload)[]> = {
  */
 export const useSectionSave = (employeeId: string | undefined) => {
   const dispatch = useAppDispatch();
+  const { showConfirmation } = useConfirmationModalContext();
+  const org = useAppSelector((state) => state.organization);
   const [isSaving, setIsSaving] = useState(false);
 
   const save = useCallback(
@@ -118,29 +131,79 @@ export const useSectionSave = (employeeId: string | undefined) => {
         return true;
       }
 
-      setIsSaving(true);
-      try {
-        const result = await dispatch(
-          updateEmployeeJobInfo({
-            employeeId,
-            payload: payload as UpdateEmployeeJobInfoPayload,
-          }),
+      const changes = buildChangeSummary(
+        payload,
+        toJobUpdatePayload(initialValues),
+        org,
+      );
+
+      const applyUpdate = async (): Promise<boolean> => {
+        setIsSaving(true);
+        try {
+          const result = await dispatch(
+            updateEmployeeJobInfo({
+              employeeId,
+              payload: payload as UpdateEmployeeJobInfoPayload,
+            }),
+          );
+
+          if (updateEmployeeJobInfo.rejected.match(result)) {
+            // updateEmployeeJobInfo already surfaces the failure via snackbar.
+            return false;
+          }
+
+          // Re-read so the section renders what was actually persisted rather than
+          // the values that were sent — the backend derives some fields on write.
+          await dispatch(fetchEmployee(employeeId));
+          return true;
+        } finally {
+          setIsSaving(false);
+        }
+      };
+
+      // The dialog is driven by a callback rather than a promise, so bridge it into
+      // one: the caller needs to know whether the section may leave edit mode, and
+      // dismissing the dialog has to leave the editor open with the changes intact.
+      return await new Promise<boolean>((resolve) => {
+        showConfirmation(
+          "Confirm Update",
+          <Box>
+            <Typography variant="body1" sx={{ mb: changes.length ? 1.5 : 0 }}>
+              Update {SECTION_TITLES[section]}?
+            </Typography>
+            {changes.map((change) => (
+              <Box key={change.label} sx={{ mb: 1 }}>
+                <Typography
+                  sx={{ fontSize: 12, fontWeight: 600, color: "text.secondary" }}
+                >
+                  {change.label}
+                </Typography>
+                <Typography sx={{ fontSize: 14, overflowWrap: "anywhere" }}>
+                  <Box component="span" sx={{ color: "text.secondary" }}>
+                    {change.from}
+                  </Box>
+                  {"  \u2192  "}
+                  <Box component="span" sx={{ fontWeight: 600 }}>
+                    {change.to}
+                  </Box>
+                </Typography>
+              </Box>
+            ))}
+          </Box>,
+          ConfirmationType.accept,
+          () => {
+            void applyUpdate().then(resolve);
+          },
+          "Update",
+          "Cancel",
         );
 
-        if (updateEmployeeJobInfo.rejected.match(result)) {
-          // updateEmployeeJobInfo already surfaces the failure via snackbar.
-          return false;
-        }
-
-        // Re-read so the section renders what was actually persisted rather than the
-        // values that were sent — the backend derives some fields on write.
-        await dispatch(fetchEmployee(employeeId));
-        return true;
-      } finally {
-        setIsSaving(false);
-      }
+        // showConfirmation gives no dismissal callback, so a cancelled dialog simply
+        // never resolves this promise. Edit mode is left open either way, which is
+        // the correct outcome for a cancel.
+      });
     },
-    [dispatch, employeeId],
+    [dispatch, employeeId, org, showConfirmation],
   );
 
   return { save, isSaving };
