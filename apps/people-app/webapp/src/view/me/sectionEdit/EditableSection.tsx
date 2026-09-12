@@ -25,6 +25,7 @@ import { EmployeePersonalInfo } from "@slices/employeeSlice/employeePersonalInfo
 import { useAppSelector } from "@slices/store";
 import { toFormValues } from "@view/employees/onboarding/EmployeeForm";
 import { createJobInfoValidationSchema } from "@view/employees/onboarding/singleOnboarding/steps/JobInfo";
+import { personalInfoValidationSchema } from "@view/employees/onboarding/singleOnboarding/steps/PersonalInfo";
 
 import SectionEditHeader from "@view/me/sectionEdit/SectionEditHeader";
 import {
@@ -99,6 +100,9 @@ const EditableSection = ({
   // an employee missing, say, a work location could never have their resignation
   // dates corrected. Each section is validated against its own fields only.
   const validationSchema = useMemo(() => {
+    // Personal information is a separate record with its own schema.
+    if (section === "personal") return personalInfoValidationSchema;
+
     const full = createJobInfoValidationSchema(employmentTypes);
     const fields = SECTION_VALIDATED_FIELDS[section];
     return fields ? full.pick(fields) : full;

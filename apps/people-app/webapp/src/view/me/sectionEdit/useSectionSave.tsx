@@ -32,8 +32,13 @@ import {
 import { enqueueSnackbarMessage } from "@slices/commonSlice/common";
 import { useAppDispatch, useAppSelector } from "@slices/store";
 import {
+  fetchEmployeePersonalInfo,
+  updateEmployeePersonalInfo,
+} from "@slices/employeeSlice/employeePersonalInfo";
+import {
   diffObject,
   toJobUpdatePayload,
+  toPersonalUpdatePayload,
 } from "@view/employees/onboarding/EmployeeForm";
 import { buildChangeSummary } from "@view/me/sectionEdit/changeSummary";
 
@@ -98,6 +103,61 @@ export const useSectionSave = (employeeId: string | undefined) => {
       currentValues: CreateEmployeeFormValues,
     ): Promise<boolean> => {
       if (!employeeId) return false;
+
+      // Personal information has its own endpoint and payload shape, so it does not
+      // share the job-info diff below.
+      if (section === "personal") {
+        const before = toPersonalUpdatePayload(initialValues);
+        const after = toPersonalUpdatePayload(currentValues);
+        const personalPatch = diffObject(before, after);
+
+        if (Object.keys(personalPatch).length === 0) {
+          dispatch(
+            enqueueSnackbarMessage({
+              message: "No changes to save.",
+              type: "warning",
+            }),
+          );
+          return true;
+        }
+
+        return await new Promise<boolean>((resolve) => {
+          showConfirmation(
+            "Confirm Update",
+            <Box>
+              <Typography variant="body1">
+                Update {SECTION_TITLES[section]}?
+              </Typography>
+            </Box>,
+            ConfirmationType.accept,
+            () => {
+              void (async () => {
+                setIsSaving(true);
+                try {
+                  const result = await dispatch(
+                    updateEmployeePersonalInfo({
+                      employeeId,
+                      // The endpoint replaces the record rather than merging, so the
+                      // complete personal payload is sent, not just the diff.
+                      data: after,
+                    }),
+                  );
+                  if (updateEmployeePersonalInfo.rejected.match(result)) {
+                    resolve(false);
+                    return;
+                  }
+                  await dispatch(fetchEmployeePersonalInfo(employeeId));
+                  resolve(true);
+                } finally {
+                  setIsSaving(false);
+                }
+              })();
+            },
+            "Update",
+            "Cancel",
+          );
+        });
+      }
 
       const fields = SECTION_FIELDS[section];
       const fullDiff = diffObject(

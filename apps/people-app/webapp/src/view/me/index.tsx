@@ -96,6 +96,7 @@ import PeopleChip, {
 } from "@component/PeopleChip/PeopleChip";
 import EditableSection from "@view/me/sectionEdit/EditableSection";
 import GeneralInfoFields from "@view/me/sectionEdit/GeneralInfoFields";
+import PersonalInfoFields from "@view/me/sectionEdit/PersonalInfoFields";
 import ResignationFields from "@view/me/sectionEdit/ResignationFields";
 import { SectionEditProvider } from "@view/me/sectionEdit/SectionEditProvider";
 
@@ -166,6 +167,90 @@ const FieldInput = ({
       InputLabelProps={{ style: { fontSize: 15 } }}
       fullWidth
     />
+  );
+};
+
+/**
+ * The read-only rendering of an employee's personal information, shown when the
+ * admin-facing section is not in edit mode.
+ */
+const PersonalInfoReadOnly = ({
+  personalInfo,
+  age,
+}: {
+  personalInfo: EmployeePersonalInfo | null;
+  age: number | null;
+}) => {
+  if (!personalInfo) {
+    return (
+      <Typography color="text.secondary">
+        Personal information not found.
+      </Typography>
+    );
+  }
+
+  const rows: { label: string; value: string | number | null }[] = [
+    { label: "Title", value: personalInfo.title },
+    { label: "First Name", value: personalInfo.firstName },
+    { label: "Last Name", value: personalInfo.lastName },
+    { label: "Full Name", value: personalInfo.fullName },
+    { label: "NIC/Passport", value: personalInfo.nicOrPassport },
+    { label: "Date of Birth", value: formatDate(personalInfo.dob, "-") },
+    { label: "Age", value: age },
+    { label: "Gender", value: personalInfo.gender },
+    { label: "Nationality", value: personalInfo.nationality },
+    { label: "Personal Email", value: personalInfo.personalEmail },
+    { label: "Personal Phone", value: personalInfo.personalPhone },
+    { label: "Resident Number", value: personalInfo.residentNumber },
+    { label: "Address Line 1", value: personalInfo.addressLine1 },
+    { label: "Address Line 2", value: personalInfo.addressLine2 },
+    { label: "City", value: personalInfo.city },
+    { label: "State/Province", value: personalInfo.stateOrProvince },
+    { label: "Postal Code", value: personalInfo.postalCode },
+    { label: "Country", value: personalInfo.country },
+  ];
+
+  return (
+    <Box>
+      <Grid container rowSpacing={1.5} columnSpacing={3}>
+        {rows.map((row) => (
+          <Grid item xs={12} sm={6} md={3} key={row.label}>
+            <ReadOnly label={row.label} value={row.value} />
+          </Grid>
+        ))}
+      </Grid>
+      {(personalInfo.emergencyContacts?.length ?? 0) > 0 && (
+        <Box sx={{ mt: 3 }}>
+          <Typography
+            sx={{
+              fontSize: 11,
+              fontWeight: 700,
+              letterSpacing: "0.1em",
+              textTransform: "uppercase",
+              color: "text.secondary",
+              mb: 1.25,
+              pb: 0.75,
+              borderBottom: 1,
+              borderColor: "divider",
+            }}
+          >
+            Emergency Contacts
+          </Typography>
+          <Grid container rowSpacing={1.5} columnSpacing={3}>
+            {(personalInfo.emergencyContacts ?? []).map((contact, index) => (
+              <Grid item xs={12} sm={6} md={3} key={index}>
+                <ReadOnly
+                  label={contact.relationship || `Contact ${index + 1}`}
+                  value={[contact.name, contact.mobile, contact.telephone]
+                    .filter(Boolean)
+                    .join(" · ")}
+                />
+              </Grid>
+            ))}
+          </Grid>
+        </Box>
+      )}
+    </Box>
   );
 };
 
@@ -1320,7 +1405,27 @@ export default function Me({
           employeeId={targetEmployeeId}
           canEdit={canEditSections}
         />
-        {canViewPersonalInfo && (
+        {/* An admin editing another employee gets the full personal-information editor,
+            matching what the onboarding wizard lets them change. The existing form below
+            stays for every other viewer: it is the self-service one, where the identity
+            fields are deliberately not editable. */}
+        {canViewPersonalInfo && canEditSections && (
+          <EditableSection
+            title="Personal Information"
+            section="personal"
+            employee={employee}
+            personalInfo={personalInfo}
+            employeeId={targetEmployeeId}
+            canEdit
+            renderFields={(isSaving) => (
+              <PersonalInfoFields isSaving={isSaving} />
+            )}
+            renderReadOnly={() => (
+              <PersonalInfoReadOnly personalInfo={personalInfo} age={age} />
+            )}
+          />
+        )}
+        {canViewPersonalInfo && !canEditSections && (
           <Accordion
             sx={{
               borderRadius: 2,
