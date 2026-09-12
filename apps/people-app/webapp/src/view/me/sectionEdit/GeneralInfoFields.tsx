@@ -35,12 +35,11 @@ import {
   resetContinuousService,
 } from "@slices/employeeSlice/employee";
 import { useAppDispatch } from "@slices/store";
-import { ResignationReasons } from "@config/constant";
 import { UNIT_CLEAR_SENTINEL } from "@slices/careerFunctionSlice/careerFunction";
 import { useAppSelector } from "@slices/store";
 import { sortAndFormatOptions } from "@utils/utils";
 
-import { canonicalizeReason } from "@view/employees/onboarding/singleOnboarding/steps/resignationReason.utils";
+import ResignationReasonField from "@view/me/sectionEdit/ResignationReasonField";
 import { useEmploymentRules } from "@view/me/sectionEdit/useEmploymentRules";
 import { useOrgCascade } from "@view/me/sectionEdit/useOrgCascade";
 
@@ -95,8 +94,15 @@ const Cluster = ({
  * here is held to exactly the rules they would be in the wizard.
  */
 const GeneralInfoFields = ({ isSaving }: { isSaving: boolean }) => {
-  const { values, errors, touched, handleChange, handleBlur, setFieldValue } =
-    useFormikContext<CreateEmployeeFormValues>();
+  const {
+    values,
+    errors,
+    touched,
+    handleChange,
+    handleBlur,
+    setFieldValue,
+    setFieldTouched,
+  } = useFormikContext<CreateEmployeeFormValues>();
 
   const {
     businessUnits,
@@ -601,29 +607,16 @@ const GeneralInfoFields = ({ isSaving }: { isSaving: boolean }) => {
             <Cell>
               {date("finalDayOfEmployment", "Final Day of Employment")}
             </Cell>
-            <Grid item xs={12} sm={6} md={3}>
-              <Autocomplete
-                freeSolo
-                options={ResignationReasons}
-                value={values.resignationReason ?? ""}
-                disabled={isSaving}
-                onChange={(_, v) =>
-                  setFieldValue("resignationReason", canonicalizeReason(v))
-                }
-                onInputChange={(_, v) =>
-                  setFieldValue("resignationReason", v || null)
-                }
-                renderInput={(params) => (
-                  <TextField
-                    {...params}
-                    size="small"
-                    label="Resignation Reason"
-                    error={err("resignationReason")}
-                    helperText={errText("resignationReason")}
-                  />
-                )}
-              />
-            </Grid>
+              <Cell>
+                <ResignationReasonField
+                  value={values.resignationReason ?? null}
+                  disabled={isSaving}
+                  error={err("resignationReason")}
+                  helperText={errText("resignationReason")}
+                  onChange={(v) => setFieldValue("resignationReason", v, true)}
+                  onBlur={() => setFieldTouched("resignationReason", true)}
+                />
+              </Cell>
           </>
         )}
       </Cluster>

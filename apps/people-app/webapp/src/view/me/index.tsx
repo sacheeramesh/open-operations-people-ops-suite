@@ -96,6 +96,7 @@ import PeopleChip, {
 } from "@component/PeopleChip/PeopleChip";
 import EditableSection from "@view/me/sectionEdit/EditableSection";
 import GeneralInfoFields from "@view/me/sectionEdit/GeneralInfoFields";
+import ResignationFields from "@view/me/sectionEdit/ResignationFields";
 import { SectionEditProvider } from "@view/me/sectionEdit/SectionEditProvider";
 
 const ReadOnly = ({
@@ -180,7 +181,17 @@ const FieldInput = ({
  * an active employee has no resignation record, so the section's presence is itself
  * the signal. A missing individual field within a shown section is rendered as a dash.
  */
-const ResignationDetails = ({ employee }: { employee: Employee | null }) => {
+const ResignationDetails = ({
+  employee,
+  personalInfo,
+  employeeId,
+  canEdit,
+}: {
+  employee: Employee | null;
+  personalInfo: EmployeePersonalInfo | null;
+  employeeId: string | undefined;
+  canEdit: boolean;
+}) => {
   const theme = useTheme();
   const status = employee?.employeeStatus;
 
@@ -197,7 +208,9 @@ const ResignationDetails = ({ employee }: { employee: Employee | null }) => {
     employee.resignationReason,
   );
 
-  if (!hasAnyDetail) return null;
+  // An admin who can edit keeps the section even when every field is empty: it is the
+  // only place to re-enter details that were cleared. A read-only viewer sees nothing.
+  if (!hasAnyDetail && !canEdit) return null;
 
   // resignationDate is deliberately not shown: it is an auto-set, write-once timestamp
   // recording when the leaver record was created, not a date anyone chose. Displaying it
@@ -211,25 +224,16 @@ const ResignationDetails = ({ employee }: { employee: Employee | null }) => {
   ];
 
   return (
-    <Accordion
+    <EditableSection
+      title="Resignation Details"
+      section="resignation"
+      employee={employee}
+      personalInfo={personalInfo}
+      employeeId={employeeId}
+      canEdit={canEdit}
       defaultExpanded
-      sx={{
-        borderRadius: 2,
-        mb: 2,
-        boxShadow: 0,
-        border: 1,
-        borderColor: "divider",
-      }}
-    >
-      <AccordionSummary
-        expandIcon={<ExpandMoreIcon />}
-        sx={{ borderRadius: 2, backgroundColor: "background.paper" }}
-      >
-        <Typography variant="h5" sx={{ fontWeight: 600 }}>
-          Resignation Details
-        </Typography>
-      </AccordionSummary>
-      <AccordionDetails>
+      renderFields={(isSaving) => <ResignationFields isSaving={isSaving} />}
+      renderReadOnly={() => (
         <Grid container rowSpacing={1.5} columnSpacing={3}>
           {dates.map((date) => {
             const daysUntil = formatDaysUntil(date.value);
@@ -274,8 +278,8 @@ const ResignationDetails = ({ employee }: { employee: Employee | null }) => {
             </Typography>
           </Grid>
         </Grid>
-      </AccordionDetails>
-    </Accordion>
+      )}
+    />
   );
 };
 
@@ -1310,7 +1314,12 @@ export default function Me({
             </>
           )}
         />
-        <ResignationDetails employee={employee} />
+        <ResignationDetails
+          employee={employee}
+          personalInfo={personalInfo}
+          employeeId={targetEmployeeId}
+          canEdit={canEditSections}
+        />
         {canViewPersonalInfo && (
           <Accordion
             sx={{

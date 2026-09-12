@@ -34,6 +34,22 @@ import {
 import { useSectionSave } from "@view/me/sectionEdit/useSectionSave";
 
 /**
+ * The fields each section validates. General Information is validated in full: it owns
+ * most of the record, and the leaver fields it reveals are validated with it so a
+ * status change cannot be saved without them.
+ */
+const SECTION_VALIDATED_FIELDS: Partial<Record<SectionKey, string[]>> = {
+  resignation: [
+    "finalDayInOffice",
+    "finalDayOfEmployment",
+    "resignationReason",
+    // employeeStatus is not edited here, but the leaver fields' conditional rules
+    // read it, so it has to stay in the picked subset for them to resolve.
+    "employeeStatus",
+  ],
+};
+
+/**
  * An accordion profile section that can be switched between a read-only rendering and
  * an inline editing form.
  *
@@ -78,10 +94,15 @@ const EditableSection = ({
   // Formik's submit is driven from the section header, which sits outside the <Form>.
   const formikRef = useRef<FormikProps<CreateEmployeeFormValues> | null>(null);
 
-  const validationSchema = useMemo(
-    () => createJobInfoValidationSchema(employmentTypes),
-    [employmentTypes],
-  );
+  // The shared schema covers every job-info field, but a section only renders its own.
+  // Validating the whole thing would block a save on a field the admin cannot see —
+  // an employee missing, say, a work location could never have their resignation
+  // dates corrected. Each section is validated against its own fields only.
+  const validationSchema = useMemo(() => {
+    const full = createJobInfoValidationSchema(employmentTypes);
+    const fields = SECTION_VALIDATED_FIELDS[section];
+    return fields ? full.pick(fields) : full;
+  }, [employmentTypes, section]);
 
   return (
     <Accordion
