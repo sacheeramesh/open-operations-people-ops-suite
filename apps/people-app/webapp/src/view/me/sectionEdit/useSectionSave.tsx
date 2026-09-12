@@ -28,6 +28,7 @@ import {
   UpdateEmployeeJobInfoPayload,
   fetchEmployee,
   updateEmployeeJobInfo,
+  validateEpf,
 } from "@slices/employeeSlice/employee";
 import { enqueueSnackbarMessage } from "@slices/commonSlice/common";
 import { useAppDispatch, useAppSelector } from "@slices/store";
@@ -230,6 +231,35 @@ export const useSectionSave = (employeeId: string | undefined) => {
           }),
         );
         return true;
+      }
+
+      // The wizard checks EPF uniqueness server-side before saving; without it an
+      // admin could assign an EPF that already belongs to another employee. Only a
+      // changed value is checked, so re-saving an unrelated field costs no request.
+      if (payload.epf) {
+        const epf = String(payload.epf).trim();
+        if (epf) {
+          try {
+            const exists = await dispatch(validateEpf(epf)).unwrap();
+            if (exists) {
+              dispatch(
+                enqueueSnackbarMessage({
+                  message: `EPF ${epf} already belongs to another employee.`,
+                  type: "error",
+                }),
+              );
+              return false;
+            }
+          } catch {
+            dispatch(
+              enqueueSnackbarMessage({
+                message: "Failed to validate EPF. The change was not saved.",
+                type: "error",
+              }),
+            );
+            return false;
+          }
+        }
       }
 
       const changes = buildChangeSummary(
