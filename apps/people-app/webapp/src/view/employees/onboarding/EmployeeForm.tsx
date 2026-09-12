@@ -82,7 +82,7 @@ const deriveFullName = (
   last?: string,
 ): string => (full ?? `${first ?? ""} ${last ?? ""}`).trim();
 
-const toFormValues = (
+export const toFormValues = (
   employee: Employee | null,
   personal: EmployeePersonalInfo | null,
 ): CreateEmployeeFormValues => {
@@ -162,7 +162,7 @@ const toFormValues = (
   return base;
 };
 
-const toJobUpdatePayload = (
+export const toJobUpdatePayload = (
   values: CreateEmployeeFormValues,
 ): UpdateEmployeeJobInfoPayload => ({
   epf: values.epf === "" ? null : values.epf,
@@ -210,7 +210,7 @@ const toJobUpdatePayload = (
   resignationReason: values.resignationReason ?? null,
 });
 
-const toPersonalUpdatePayload = (
+export const toPersonalUpdatePayload = (
   values: CreateEmployeeFormValues,
 ): EmployeePersonalInfoUpdate => ({
   nicOrPassport: values.personalInfo.nicOrPassport ?? null,
@@ -327,7 +327,7 @@ function CustomStepIcon(props: StepIconProps) {
   );
 }
 
-const diffObject = <T extends Record<string, any>>(
+export const diffObject = <T extends Record<string, any>>(
   prev: T,
   next: T,
 ): Partial<T> => {
