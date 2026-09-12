@@ -242,14 +242,6 @@ export const routes: RouteObjectWithRole[] = [
     allowRoles: [Role.ADMIN, Role.LEAD],
     hideFromSidebar: true,
   },
-  {
-    path: "/employees/:employeeId/edit",
-    text: "Edit Employee",
-    icon: React.createElement(GroupsIcon),
-    element: React.createElement(View.employeeEdit),
-    allowRoles: [Role.ADMIN],
-    hideFromSidebar: true,
-  },
 ];
 
 function isRouteActive(routeObj: RouteObjectWithRole, roles: string[]): boolean {

@@ -27,7 +27,6 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import RemoveCircleOutlineIcon from "@mui/icons-material/RemoveCircleOutline";
 import RestartAltIcon from "@mui/icons-material/RestartAlt";
 import SaveIcon from "@mui/icons-material/Save";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
 import FileDownloadOutlinedIcon from "@mui/icons-material/FileDownloadOutlined";
 import QrCode2Icon from "@mui/icons-material/QrCode2";
 import PersonOffIcon from "@mui/icons-material/PersonOff";
@@ -86,7 +85,7 @@ import {
   getIn,
 } from "formik";
 import { useEffect, useRef, useState, useMemo } from "react";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { array, object, string } from "yup";
 import { Role, selectRoles } from "@slices/authSlice/auth";
 import { useAppDispatch, useAppSelector } from "@slices/store";
@@ -425,7 +424,6 @@ export default function Me({
   readOnly = false,
 }: { employeeId?: string; readOnly?: boolean } = {}) {
   const dispatch = useAppDispatch();
-  const navigate = useNavigate();
   const location = useLocation();
   const { showConfirmation } = useConfirmationModalContext();
   const roles = useAppSelector(selectRoles);
@@ -962,22 +960,6 @@ export default function Me({
                   </span>
                 </Tooltip>
               )}
-              {readOnly &&
-                targetEmployeeId &&
-                roles.includes(Role.ADMIN) &&
-                !location.state?.fromMyTeam && (
-                  <Button
-                    variant="contained"
-                    color="secondary"
-                    startIcon={<EditOutlinedIcon />}
-                    sx={{ textTransform: "none", whiteSpace: "nowrap" }}
-                    onClick={() =>
-                      navigate(`/employees/${targetEmployeeId}/edit`)
-                    }
-                  >
-                    Edit
-                  </Button>
-                )}
             </Stack>
           </Stack>
         </Paper>

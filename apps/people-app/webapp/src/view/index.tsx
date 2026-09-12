@@ -22,7 +22,6 @@ const bulkOnboarding = lazy(() => import("@view/employees/onboarding/bulkOnboard
 const employeesList = lazy(() => import("@view/employees/employeesView/EmployeesView"));
 const help = lazy(() => import("@view/help/help"));
 const employeeDetails = lazy(() => import("@view/employees/employeeDetail/employeeDetail"));
-const employeeEdit = lazy(() => import("@view/employees/employeeEdit/employeeEdit"));
 const myTeamView = lazy(() => import("@view/employees/myTeam/MyTeamView"));
 const activeEmployeesReport = lazy(() => import("@view/reports/ActiveEmployeesReportView"));
 const resignationReport = lazy(() => import("@view/reports/ResignationReportView"));
@@ -37,7 +36,6 @@ export const View = {
   employeesList,
   myTeamView,
   employeeDetails,
-  employeeEdit,
   activeEmployeesReport,
   resignationReport,
   qrCodesReport,
