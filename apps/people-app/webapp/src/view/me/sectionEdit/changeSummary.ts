@@ -15,6 +15,7 @@
 // under the License.
 
 import { UpdateEmployeeJobInfoPayload } from "@slices/employeeSlice/employee";
+import { EmployeePersonalInfoUpdate } from "@slices/employeeSlice/employeePersonalInfo";
 import { OrganizationState } from "@slices/organizationSlice/organization";
 
 /** A single field's before/after, ready to render in the confirmation dialog. */
@@ -53,6 +54,30 @@ const FIELD_LABELS: Partial<
   finalDayInOffice: "Last Day in Office",
   finalDayOfEmployment: "Final Day of Employment",
   resignationReason: "Resignation Reason",
+};
+
+/** Human-readable labels for the personal-information payload keys. */
+const PERSONAL_FIELD_LABELS: Partial<
+  Record<keyof EmployeePersonalInfoUpdate, string>
+> = {
+  nicOrPassport: "NIC/Passport",
+  firstName: "First Name",
+  lastName: "Last Name",
+  fullName: "Full Name",
+  title: "Title",
+  dob: "Date of Birth",
+  gender: "Gender",
+  personalEmail: "Personal Email",
+  personalPhone: "Personal Phone",
+  residentNumber: "Resident Number",
+  addressLine1: "Address Line 1",
+  addressLine2: "Address Line 2",
+  city: "City",
+  stateOrProvince: "State/Province",
+  postalCode: "Postal Code",
+  country: "Country",
+  nationality: "Nationality",
+  emergencyContacts: "Emergency Contacts",
 };
 
 /** Shown in place of an empty value, matching the read-only view's dash. */
@@ -145,5 +170,47 @@ export const buildChangeSummary = (
       label: FIELD_LABELS[field] ?? field,
       from: displayValue(field, before[field], org),
       to: displayValue(field, payload[field], org),
+    }))
+    .filter((row) => row.from !== row.to);
+
+/**
+ * Renders a personal-information value. Emergency contacts are a list of records
+ * rather than a scalar, so they are summarised by who they name — the dialog says
+ * which contacts the record will end up with, not a diff of each sub-field.
+ */
+const displayPersonalValue = (
+  field: keyof EmployeePersonalInfoUpdate,
+  value: unknown,
+): string => {
+  if (value === null || value === undefined || value === "") return EMPTY;
+
+  if (field === "emergencyContacts" && Array.isArray(value)) {
+    const named = value
+      .map((contact) =>
+        [contact?.name, contact?.relationship].filter(Boolean).join(" — "),
+      )
+      .filter(Boolean);
+    return named.length > 0 ? named.join("; ") : EMPTY;
+  }
+
+  return String(value);
+};
+
+/**
+ * The confirmation rows for a personal-information update.
+ *
+ * The endpoint replaces the record rather than merging, so the payload always carries
+ * every field. Rows are therefore derived by comparing against the pre-edit values —
+ * only what actually differs is shown, rather than all eighteen fields every time.
+ */
+export const buildPersonalChangeSummary = (
+  before: EmployeePersonalInfoUpdate,
+  after: EmployeePersonalInfoUpdate,
+): ChangeRow[] =>
+  (Object.keys(after) as (keyof EmployeePersonalInfoUpdate)[])
+    .map((field) => ({
+      label: PERSONAL_FIELD_LABELS[field] ?? field,
+      from: displayPersonalValue(field, before[field]),
+      to: displayPersonalValue(field, after[field]),
     }))
     .filter((row) => row.from !== row.to);

@@ -40,7 +40,11 @@ import {
   toJobUpdatePayload,
   toPersonalUpdatePayload,
 } from "@view/employees/onboarding/EmployeeForm";
-import { buildChangeSummary } from "@view/me/sectionEdit/changeSummary";
+import {
+  ChangeRow,
+  buildChangeSummary,
+  buildPersonalChangeSummary,
+} from "@view/me/sectionEdit/changeSummary";
 
 /** Job-info fields belonging to each editable profile section. */
 const SECTION_FIELDS: Record<string, (keyof UpdateEmployeeJobInfoPayload)[]> = {
@@ -74,6 +78,39 @@ const SECTION_FIELDS: Record<string, (keyof UpdateEmployeeJobInfoPayload)[]> = {
     "resignationReason",
   ],
 };
+
+/** The before/after rows shown in the confirmation dialog. */
+const ChangeList = ({
+  title,
+  changes,
+}: {
+  title: string;
+  changes: ChangeRow[];
+}) => (
+  <Box>
+    <Typography variant="body1" sx={{ mb: changes.length ? 1.5 : 0 }}>
+      Update {title}?
+    </Typography>
+    {changes.map((change) => (
+      <Box key={change.label} sx={{ mb: 1 }}>
+        <Typography
+          sx={{ fontSize: 12, fontWeight: 600, color: "text.secondary" }}
+        >
+          {change.label}
+        </Typography>
+        <Typography sx={{ fontSize: 14, overflowWrap: "anywhere" }}>
+          <Box component="span" sx={{ color: "text.secondary" }}>
+            {change.from}
+          </Box>
+          {"  \u2192  "}
+          <Box component="span" sx={{ fontWeight: 600 }}>
+            {change.to}
+          </Box>
+        </Typography>
+      </Box>
+    ))}
+  </Box>
+);
 
 /** Section names as they read in the confirmation dialog. */
 const SECTION_TITLES: Record<string, string> = {
@@ -124,11 +161,10 @@ export const useSectionSave = (employeeId: string | undefined) => {
         return await new Promise<boolean>((resolve) => {
           showConfirmation(
             "Confirm Update",
-            <Box>
-              <Typography variant="body1">
-                Update {SECTION_TITLES[section]}?
-              </Typography>
-            </Box>,
+            <ChangeList
+              title={SECTION_TITLES[section]}
+              changes={buildPersonalChangeSummary(before, after)}
+            />,
             ConfirmationType.accept,
             () => {
               void (async () => {
@@ -232,33 +268,7 @@ export const useSectionSave = (employeeId: string | undefined) => {
       return await new Promise<boolean>((resolve) => {
         showConfirmation(
           "Confirm Update",
-          <Box>
-            <Typography variant="body1" sx={{ mb: changes.length ? 1.5 : 0 }}>
-              Update {SECTION_TITLES[section]}?
-            </Typography>
-            {changes.map((change) => (
-              <Box key={change.label} sx={{ mb: 1 }}>
-                <Typography
-                  sx={{
-                    fontSize: 12,
-                    fontWeight: 600,
-                    color: "text.secondary",
-                  }}
-                >
-                  {change.label}
-                </Typography>
-                <Typography sx={{ fontSize: 14, overflowWrap: "anywhere" }}>
-                  <Box component="span" sx={{ color: "text.secondary" }}>
-                    {change.from}
-                  </Box>
-                  {"  \u2192  "}
-                  <Box component="span" sx={{ fontWeight: 600 }}>
-                    {change.to}
-                  </Box>
-                </Typography>
-              </Box>
-            ))}
-          </Box>,
+          <ChangeList title={SECTION_TITLES[section]} changes={changes} />,
           ConfirmationType.accept,
           () => {
             void applyUpdate().then(resolve);
