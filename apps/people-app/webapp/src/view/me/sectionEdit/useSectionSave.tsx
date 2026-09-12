@@ -18,7 +18,11 @@ import { useCallback, useState } from "react";
 
 import { Box, Typography } from "@mui/material";
 
-import { ConfirmationType, CreateEmployeeFormValues, EmployeeStatus } from "@/types/types";
+import {
+  ConfirmationType,
+  CreateEmployeeFormValues,
+  EmployeeStatus,
+} from "@/types/types";
 import { useConfirmationModalContext } from "@context/DialogContext";
 import {
   UpdateEmployeeJobInfoPayload,
@@ -56,6 +60,7 @@ const SECTION_FIELDS: Record<string, (keyof UpdateEmployeeJobInfoPayload)[]> = {
     "businessUnitId",
     "unitId",
     "houseId",
+    "continuousServiceRecord",
     "employeeStatus",
   ],
   resignation: [
@@ -174,7 +179,11 @@ export const useSectionSave = (employeeId: string | undefined) => {
             {changes.map((change) => (
               <Box key={change.label} sx={{ mb: 1 }}>
                 <Typography
-                  sx={{ fontSize: 12, fontWeight: 600, color: "text.secondary" }}
+                  sx={{
+                    fontSize: 12,
+                    fontWeight: 600,
+                    color: "text.secondary",
+                  }}
                 >
                   {change.label}
                 </Typography>

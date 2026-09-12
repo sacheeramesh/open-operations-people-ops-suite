@@ -16,11 +16,12 @@
 
 import dayjs from "dayjs";
 import { useFormikContext } from "formik";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 
 import { CreateEmployeeFormValues } from "@/types/types";
 import { useAppSelector } from "@slices/store";
 import {
+  AUTO_ID_EMPLOYMENT_TYPES,
   FIXED_TERM_EMPLOYMENT_TYPE,
   PROBATION_EMPLOYMENT_TYPE,
 } from "@view/employees/onboarding/singleOnboarding/steps/JobInfo";
@@ -44,6 +45,9 @@ export const useEmploymentRules = () => {
   const { companies, employmentTypes } = useAppSelector(
     (state) => state.organization,
   );
+
+  const [internshipDurationMonths, setInternshipDurationMonths] =
+    useState<number>(0);
 
   const selectedType = useMemo(
     () => employmentTypes.find((et) => et.id === values.employmentTypeId),
@@ -134,12 +138,61 @@ export const useEmploymentRules = () => {
     setFieldValue,
   ]);
 
+  const isInternship = useMemo(
+    () => /^internship$/i.test(typeName),
+    [typeName],
+  );
+
+  /** An internship's agreement end date is derived from its duration in months. */
+  const computeAgreementEndDate = useCallback(
+    (startDate: string | null, months: number) => {
+      if (!startDate || !months) return null;
+      try {
+        return dayjs(startDate).add(months, "month").format("YYYY-MM-DD");
+      } catch {
+        return null;
+      }
+    },
+    [],
+  );
+
+  const handleInternshipDurationChange = useCallback(
+    (months: number) => {
+      setInternshipDurationMonths(months);
+      const computed = computeAgreementEndDate(
+        values.startDate ?? null,
+        months,
+      );
+      if (computed) setFieldValue("agreementEndDate", computed);
+    },
+    [setFieldValue, values.startDate, computeAgreementEndDate],
+  );
+
   const handleEmploymentTypeChange = useCallback(
     (newEmploymentTypeId: number) => {
       setFieldValue("employmentTypeId", newEmploymentTypeId);
 
       const next = employmentTypes.find((e) => e.id === newEmploymentTypeId);
       const nextName = next?.name?.trim() ?? "";
+
+      const isNewInternship = /^internship$/i.test(nextName);
+      const isAutoIdType = AUTO_ID_EMPLOYMENT_TYPES.test(nextName);
+
+      if (isNewInternship) {
+        // Six months is the wizard's default internship term; the agreement end date
+        // follows from it immediately so the field is never left blank.
+        setInternshipDurationMonths(6);
+        setFieldValue("employeeId", "");
+        const computed = computeAgreementEndDate(values.startDate ?? null, 6);
+        if (computed) setFieldValue("agreementEndDate", computed);
+        return;
+      }
+
+      setInternshipDurationMonths(0);
+
+      // Types whose IDs are generated rather than assigned drop any manually entered
+      // ID, so one typed for a fixed-term contract cannot survive a switch away.
+      if (isAutoIdType) setFieldValue("employeeId", "");
 
       // Types that carry no agreement end date drop any value the previous type had,
       // so a stale date can't be submitted against a type that doesn't use one.
@@ -151,13 +204,16 @@ export const useEmploymentRules = () => {
         setFieldValue("agreementEndDate", null);
       }
     },
-    [setFieldValue, employmentTypes],
+    [setFieldValue, employmentTypes, values.startDate, computeAgreementEndDate],
   );
 
   return {
     isPermanent,
     isProbationType,
     isFixedTerm,
+    isInternship,
+    internshipDurationMonths,
+    handleInternshipDurationChange,
     showAgreementEndDate,
     selectableEmploymentTypes,
     matchedProbationLocation,

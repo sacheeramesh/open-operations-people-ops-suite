@@ -25,33 +25,35 @@ export interface ChangeRow {
 }
 
 /** Human-readable labels for the payload keys an admin can change. */
-const FIELD_LABELS: Partial<Record<keyof UpdateEmployeeJobInfoPayload, string>> =
-  {
-    epf: "EPF",
-    workEmail: "Work Email",
-    workLocation: "Work Location",
-    startDate: "Start Date",
-    secondaryJobTitle: "Secondary Job Title",
-    jobRole: "Job Role",
-    externalDesignation: "External Designation",
-    managerEmail: "Lead",
-    additionalManagerEmails: "Additional Leads",
-    probationEndDate: "Probation End Date",
-    agreementEndDate: "Agreement End Date",
-    employmentTypeId: "Employment Type",
-    designationId: "Designation",
-    companyId: "Company",
-    officeId: "Office",
-    teamId: "Team",
-    subTeamId: "Sub Team",
-    businessUnitId: "Business Unit",
-    unitId: "Unit",
-    houseId: "House",
-    employeeStatus: "Employee Status",
-    finalDayInOffice: "Last Day in Office",
-    finalDayOfEmployment: "Final Day of Employment",
-    resignationReason: "Resignation Reason",
-  };
+const FIELD_LABELS: Partial<
+  Record<keyof UpdateEmployeeJobInfoPayload, string>
+> = {
+  epf: "EPF",
+  workEmail: "Work Email",
+  workLocation: "Work Location",
+  startDate: "Start Date",
+  secondaryJobTitle: "Secondary Job Title",
+  jobRole: "Job Role",
+  externalDesignation: "External Designation",
+  managerEmail: "Lead",
+  additionalManagerEmails: "Additional Leads",
+  probationEndDate: "Probation End Date",
+  agreementEndDate: "Agreement End Date",
+  employmentTypeId: "Employment Type",
+  designationId: "Designation",
+  companyId: "Company",
+  officeId: "Office",
+  teamId: "Team",
+  subTeamId: "Sub Team",
+  businessUnitId: "Business Unit",
+  unitId: "Unit",
+  houseId: "House",
+  continuousServiceRecord: "Continuous Service Record",
+  employeeStatus: "Employee Status",
+  finalDayInOffice: "Last Day in Office",
+  finalDayOfEmployment: "Final Day of Employment",
+  resignationReason: "Resignation Reason",
+};
 
 /** Shown in place of an empty value, matching the read-only view's dash. */
 const EMPTY = "—";
