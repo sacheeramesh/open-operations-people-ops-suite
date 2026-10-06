@@ -36,12 +36,14 @@ type GraphQlRetryConfig record {|
     decimal maxWaitInterval = 20.0;
 |};
 
-# Employee name fields returned by the HR entity service.
-type EmployeeNameResponse record {
+# Employee fields the reminder needs from the HR entity service.
+public type Employee record {
     # First name of the employee
     string? firstName;
     # Last name of the employee
     string? lastName;
+    # Work email of the employee's current lead
+    string? managerEmail;
 };
 
 # GraphQL single employee response.
@@ -49,6 +51,6 @@ type SingleEmployeeResponse record {|
     # Response data wrapper
     record {|
         # Employee data
-        EmployeeNameResponse? employee;
+        Employee? employee;
     |} data;
 |};

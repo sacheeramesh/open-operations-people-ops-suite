@@ -25,8 +25,8 @@ import ballerina/time;
 configurable int reminderLeadTimeInDays = 28;
 
 # Entry point for the sabbatical reminder job (deployed as a WSO2 Choreo Scheduled Task, run daily).
-# Emails the lead of every approved sabbatical leave starting within the reminder window that has not
-# had its reminder yet, then records the reminder as sent. One failed leave does not stop the others;
+# Emails the employee's current lead (from the HR entity service) about every approved sabbatical leave
+# starting within the reminder window that has not had its reminder yet, then records the reminder as sent. One failed leave does not stop the others;
 # the run reports an error at the end so it visibly shows as failed, and the failed leaves are retried
 # on the next run.
 #
@@ -63,16 +63,36 @@ public function main() returns error? {
 # + reminder - Leave due for a reminder
 # + return - Error if the email could not be sent or recorded
 function sendReminder(database:SabbaticalReminder reminder) returns error? {
-    string|error employeeName = employee:getEmployeeName(reminder.email);
-    if employeeName is error {
-        log:printWarn("Could not fetch employee name, using email instead", employeeName,
+    employee:Employee|error employeeInfo = employee:getEmployee(reminder.email);
+    if employeeInfo is error {
+        log:printWarn("Could not fetch the employee from HR, using the approving lead and the email as name",
+                employeeInfo, leaveId = reminder.id);
+    }
+    string employeeName = employeeInfo is employee:Employee
+        ? employee:fullName(employeeInfo, reminder.email) : reminder.email;
+
+    // The reminder goes to the employee's current lead in HR; the lead who approved the leave is the
+    // fallback when HR has no lead on record.
+    string? hrLeadEmail = employeeInfo is employee:Employee ? employee:leadEmail(employeeInfo) : ();
+    string? leadEmail = hrLeadEmail ?: reminder.approverEmail;
+    if leadEmail is () {
+        return error("No lead in HR and no approving lead recorded for the leave");
+    }
+    if hrLeadEmail is () && employeeInfo is employee:Employee {
+        log:printWarn("No lead recorded in HR, using the approving lead", leaveId = reminder.id);
+    }
+
+    employee:Employee|error leadInfo = employee:getEmployee(leadEmail);
+    if leadInfo is error {
+        log:printWarn("Could not fetch the lead from HR, greeting them by email", leadInfo,
                 leaveId = reminder.id);
     }
 
     check email:sendSabbaticalReminder({
-        employeeName: employeeName is string ? employeeName : reminder.email,
+        employeeName,
         employeeEmail: reminder.email,
-        leadEmail: reminder.approverEmail,
+        leadEmail,
+        leadName: leadInfo is employee:Employee ? employee:firstName(leadInfo, leadEmail) : leadEmail,
         startDate: reminder.startDate,
         endDate: reminder.endDate,
         durationDays: reminder.durationDays

@@ -148,9 +148,10 @@ Frontend runs on `http://localhost:3000`.
 
 `sabbatical-reminder/` is a separate Ballerina program, deployed as a Choreo Scheduled Task that runs once a day.
 Each run emails the lead of every approved sabbatical leave starting within the next 28 days that has not had its
-reminder yet (To: the approving lead, CC: People Operations and the employee), then records the send in
-`leave_submissions.sabbatical_reminder_sent_on`. A leave approved less than 4 weeks before it starts gets its
-reminder on the next run; a failed send is retried on the next run.
+reminder yet (To: the employee's current lead in the HR entity service, or the approving lead when HR has none;
+CC: People Operations and the employee), then records the send in `leave_submissions.sabbatical_reminder_sent_on`.
+A leave approved less than 4 weeks before it starts gets its reminder on the next run; a failed send is retried on
+the next run.
 
 1. Apply `backend/resources/leave_app_update_v1.1.1.sql` to the leave database (adds the reminder column).
 2. Copy `sabbatical-reminder/Config.toml.local` to `sabbatical-reminder/Config.toml` and fill it in. In non-production
@@ -189,7 +190,7 @@ bal run
 - At most 6 weeks (`sabbaticalLeaveMaxApplicationDuration`).
 - The applicant must acknowledge the planning and handover responsibility when submitting, and the lead must confirm
   that plans are in place when approving.
-- The approving lead is reminded 4 weeks before the leave starts (see [Sabbatical Reminder Job](#sabbatical-reminder-job)).
+- The employee's current lead is reminded 4 weeks before the leave starts (see [Sabbatical Reminder Job](#sabbatical-reminder-job)).
 
 ## Project Structure
 
