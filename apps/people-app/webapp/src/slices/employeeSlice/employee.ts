@@ -31,6 +31,7 @@ import { createAsyncThunk, createSlice, PayloadAction } from "@reduxjs/toolkit";
 import { enqueueSnackbarMessage } from "@slices/commonSlice/common";
 import type { RootState } from "@slices/store";
 import { APIService } from "@utils/apiService";
+import { withSafeSearchString } from "@utils/inputRules";
 import { HttpStatusCode, isCancel } from "axios";
 
 export interface Employee {
@@ -472,7 +473,7 @@ export const fetchFilteredEmployees = createAsyncThunk<
     try {
       const response = await APIService.getInstance().post(
         AppConfig.serviceUrls.searchEmployees,
-        filterAttributes,
+        withSafeSearchString(filterAttributes),
       );
       return response.data as FilteredEmployeesResponse;
     } catch (error: any) {
@@ -504,7 +505,7 @@ export const fetchQrCodeEmployees = createAsyncThunk<
     try {
       const response = await APIService.getInstance().post(
         AppConfig.serviceUrls.qrCodesSearch,
-        filterAttributes,
+        withSafeSearchString(filterAttributes),
       );
       return response.data as QrEmployeesResponse;
     } catch (error: any) {

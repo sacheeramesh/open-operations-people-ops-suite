@@ -50,6 +50,11 @@ import {
 } from "@root/src/config/constant";
 import { CreateEmployeeFormValues } from "@root/src/types/types";
 import { normalizeEmail, sortAndFormatOptions } from "@utils/utils";
+import {
+  EMAIL_PATTERN,
+  PHONE_PATTERN,
+  withoutInvisibleCharacters,
+} from "@utils/inputRules";
 import dayjs from "dayjs";
 
 const PERSONAL_INFO_ICONS = {
@@ -87,23 +92,23 @@ export const personalInfoValidationSchema = Yup.object().shape({
         originalValue === null ? "" : value,
       )
       .required("Date of birth is required"),
+    // Email and phone use the backend's own patterns, checked against the value with any
+    // invisible characters removed — which is what is sent — so the form and the backend
+    // never disagree about a value that looks fine.
     personalEmail: Yup.string()
-      .email("Invalid email format")
+      .matches(EMAIL_PATTERN, "Invalid email format")
       .max(254, "Email must be at most 254 characters")
+      .transform(withoutInvisibleCharacters)
       .transform((value) => (value === "" ? null : value))
       .nullable(),
     personalPhone: Yup.string()
-      .matches(
-        /^[0-9+\-()\s]*[0-9][0-9+\-()\s]*$/,
-        "Invalid personal phone number format",
-      )
+      .matches(PHONE_PATTERN, "Invalid personal phone number format")
+      .transform(withoutInvisibleCharacters)
       .transform((value) => (value === "" ? null : value))
       .nullable(),
     residentNumber: Yup.string()
-      .matches(
-        /^[0-9+\-()\s]*[0-9][0-9+\-()\s]*$/,
-        "Invalid resident number format",
-      )
+      .matches(PHONE_PATTERN, "Invalid resident number format")
+      .transform(withoutInvisibleCharacters)
       .transform((value) => (value === "" ? null : value))
       .nullable(),
     addressLine1: Yup.string()

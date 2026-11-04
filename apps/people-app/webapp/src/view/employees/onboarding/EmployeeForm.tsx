@@ -50,6 +50,7 @@ import {
   emptyCreateEmployeeValues,
 } from "@root/src/types/types";
 import { markAllFieldsTouched } from "@root/src/utils/utils";
+import { stripInvisibleCharacters } from "@utils/inputRules";
 import {
   createEmployee,
   CreateEmployeePayload,
@@ -172,7 +173,7 @@ export const toJobUpdatePayload = (
 ): UpdateEmployeeJobInfoPayload => ({
   epf: values.epf === "" ? null : values.epf,
   workLocation: values.workLocation,
-  workEmail: values.workEmail,
+  workEmail: stripInvisibleCharacters(values.workEmail ?? ""),
   startDate: values.startDate,
   secondaryJobTitle: values.secondaryJobTitle,
   jobRole: values.jobRole,
@@ -232,37 +233,25 @@ export const toPersonalUpdatePayload = (
   title: values.personalInfo.title ?? null,
   dob: values.personalInfo.dob ?? null,
   gender: values.personalInfo.gender ?? null,
-  personalEmail:
-    values.personalInfo.personalEmail === ""
-      ? null
-      : values.personalInfo.personalEmail,
-  personalPhone:
-    values.personalInfo.personalPhone === ""
-      ? null
-      : values.personalInfo.personalPhone,
-  residentNumber:
-    values.personalInfo.residentNumber === ""
-      ? null
-      : values.personalInfo.residentNumber,
-  addressLine1:
-    values.personalInfo.addressLine1 === ""
-      ? null
-      : values.personalInfo.addressLine1,
-  addressLine2:
-    values.personalInfo.addressLine2 === ""
-      ? null
-      : values.personalInfo.addressLine2,
-  city: values.personalInfo.city === "" ? null : values.personalInfo.city,
-  stateOrProvince:
-    values.personalInfo.stateOrProvince === ""
-      ? null
-      : values.personalInfo.stateOrProvince,
-  postalCode:
-    values.personalInfo.postalCode === ""
-      ? null
-      : values.personalInfo.postalCode,
-  country:
-    values.personalInfo.country === "" ? null : values.personalInfo.country,
+  // Optional fields go out as "" when empty: the backend reads "" as "clear this field"
+  // and null as "leave it unchanged", so null would keep a value the admin deleted.
+  // Phone numbers and the email also lose any invisible characters a paste brought along,
+  // which the backend refuses.
+  personalEmail: stripInvisibleCharacters(
+    values.personalInfo.personalEmail ?? "",
+  ),
+  personalPhone: stripInvisibleCharacters(
+    values.personalInfo.personalPhone ?? "",
+  ),
+  residentNumber: stripInvisibleCharacters(
+    values.personalInfo.residentNumber ?? "",
+  ),
+  addressLine1: values.personalInfo.addressLine1 ?? "",
+  addressLine2: values.personalInfo.addressLine2 ?? "",
+  city: values.personalInfo.city ?? "",
+  stateOrProvince: values.personalInfo.stateOrProvince ?? "",
+  postalCode: values.personalInfo.postalCode ?? "",
+  country: values.personalInfo.country ?? "",
   nationality: values.personalInfo.nationality ?? null,
   emergencyContacts:
     values.personalInfo.emergencyContacts &&
@@ -725,7 +714,9 @@ export default function EmployeeForm({ mode }: EmployeeFormProps) {
                 jobRole: values.jobRole || "",
                 externalDesignation: values.externalDesignation || "",
                 workLocation: values.workLocation,
-                workEmail: values.workEmail?.trim() || undefined,
+                workEmail:
+                  stripInvisibleCharacters(values.workEmail ?? "").trim() ||
+                  undefined,
                 startDate: values.startDate,
                 managerEmail: values.managerEmail,
                 additionalManagerEmails: values.additionalManagerEmail?.length
@@ -767,10 +758,18 @@ export default function EmployeeForm({ mode }: EmployeeFormProps) {
                   title: values.personalInfo.title || undefined,
                   dob: values.personalInfo.dob || undefined,
                   gender: values.personalInfo.gender || undefined,
-                  personalEmail: values.personalInfo.personalEmail || undefined,
-                  personalPhone: values.personalInfo.personalPhone || undefined,
+                  personalEmail:
+                    stripInvisibleCharacters(
+                      values.personalInfo.personalEmail ?? "",
+                    ) || undefined,
+                  personalPhone:
+                    stripInvisibleCharacters(
+                      values.personalInfo.personalPhone ?? "",
+                    ) || undefined,
                   residentNumber:
-                    values.personalInfo.residentNumber || undefined,
+                    stripInvisibleCharacters(
+                      values.personalInfo.residentNumber ?? "",
+                    ) || undefined,
                   addressLine1: values.personalInfo.addressLine1 || undefined,
                   addressLine2: values.personalInfo.addressLine2 || undefined,
                   city: values.personalInfo.city || undefined,

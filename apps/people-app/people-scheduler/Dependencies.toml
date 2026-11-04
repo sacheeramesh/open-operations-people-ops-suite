@@ -432,7 +432,7 @@ modules = [
 [[package]]
 org = "wso2_open_operations"
 name = "people_scheduler"
-version = "1.4.0"
+version = "1.4.2"
 dependencies = [
 	{org = "ballerina", name = "http"},
 	{org = "ballerina", name = "lang.regexp"},

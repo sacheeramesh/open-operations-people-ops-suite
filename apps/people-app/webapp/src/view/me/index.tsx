@@ -84,6 +84,12 @@ import {
   isPresentOrFuture,
 } from "@root/src/utils/utils";
 import {
+  EMAIL_PATTERN,
+  PHONE_PATTERN,
+  stripInvisibleCharacters,
+  withoutInvisibleCharacters,
+} from "@utils/inputRules";
+import {
   FieldArray,
   Form,
   Formik,
@@ -680,23 +686,25 @@ export default function Me({
     setShouldRequireEmergencyContacts(has);
   }, [personalInfo]);
 
+  // Email and phone use the backend's own patterns, checked against the value with any
+  // invisible characters removed — which is what savePersonalInfo sends.
   const personalInfoSchema = object().shape({
     personalEmail: string()
       .nullable()
-      .email("Invalid email format")
-      .max(254, "Email must be at most 254 characters"),
+      .matches(EMAIL_PATTERN, "Invalid email format")
+      .max(254, "Email must be at most 254 characters")
+      .transform(withoutInvisibleCharacters)
+      .transform((value) => (value === "" ? null : value)),
     personalPhone: string()
       .nullable()
-      .matches(
-        /^[0-9+\-()\s]*[0-9][0-9+\-()\s]*$/,
-        "Invalid personal phone number format",
-      ),
+      .matches(PHONE_PATTERN, "Invalid personal phone number format")
+      .transform(withoutInvisibleCharacters)
+      .transform((value) => (value === "" ? null : value)),
     residentNumber: string()
       .nullable()
-      .matches(
-        /^[0-9+\-()\s]*[0-9][0-9+\-()\s]*$/,
-        "Invalid resident number format",
-      ),
+      .matches(PHONE_PATTERN, "Invalid resident number format")
+      .transform(withoutInvisibleCharacters)
+      .transform((value) => (value === "" ? null : value)),
     addressLine1: string()
       .nullable()
       .max(255, "Address Line 1 must be at most 255 characters"),
@@ -802,10 +810,15 @@ export default function Me({
   const savePersonalInfo = (values: EmployeePersonalInfo) => {
     try {
       if (employee?.employeeId) {
+        // An emptied field goes out as "", which the backend reads as "clear it"; an
+        // untouched empty one stays null, meaning "leave it". Invisible characters a paste
+        // brought along are removed, since the backend refuses them.
+        const withoutInvisible = (value: string | null) =>
+          value === null ? null : stripInvisibleCharacters(value);
         const dataToSave = {
-          personalEmail: values.personalEmail,
-          personalPhone: values.personalPhone,
-          residentNumber: values.residentNumber,
+          personalEmail: withoutInvisible(values.personalEmail),
+          personalPhone: withoutInvisible(values.personalPhone),
+          residentNumber: withoutInvisible(values.residentNumber),
           addressLine1: values.addressLine1,
           addressLine2: values.addressLine2,
           city: values.city,

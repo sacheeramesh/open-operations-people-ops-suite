@@ -18,11 +18,19 @@ import ballerina/constraint;
 import ballerina/lang.regexp;
 import ballerina/sql;
 
-# Email validation pattern.
-public final regexp:RegExp EMAIL_PATTERN = re `^[a-zA-Z0-9._%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`;
+# Email validation pattern. The apostrophe is allowed before the @ for addresses such as
+# o'brien@example.com. The webapp's EMAIL_PATTERN (webapp/src/utils/inputRules.ts) mirrors
+# this, so keep the two in step.
+public final regexp:RegExp EMAIL_PATTERN = re `^[a-zA-Z0-9._%+\-']+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`;
 
-# Phone number validation pattern.
+# Phone number validation pattern. Mirrored by PHONE_PATTERN in webapp/src/utils/inputRules.ts.
 public final regexp:RegExp PHONE_PATTERN = re `^[0-9+\-()\s]*[0-9][0-9+\-()\s]*$`;
+
+# Email pattern that also accepts "", for update fields where "" clears the stored value.
+public final regexp:RegExp CLEARABLE_EMAIL_PATTERN = re `^$|${EMAIL_PATTERN}`;
+
+# Phone pattern that also accepts "", for update fields where "" clears the stored value.
+public final regexp:RegExp CLEARABLE_PHONE_PATTERN = re `^$|${PHONE_PATTERN}`;
 
 # Date validation pattern (YYYY-MM-DD).
 public final regexp:RegExp DATE_PATTERN = re `^\d{4}-\d{2}-\d{2}$`;
@@ -1198,14 +1206,14 @@ public type UpdateEmployeePersonalInfoPayload record {|
     # Nationality
     @constraint:String {maxLength: 100}
     string? nationality = ();
-    # Personal email address
-    @constraint:String {maxLength: 254, pattern: re `${EMAIL_PATTERN}`}
+    # Personal email address; "" clears it
+    @constraint:String {maxLength: 254, pattern: re `${CLEARABLE_EMAIL_PATTERN}`}
     string? personalEmail = ();
-    # Personal phone number
-    @constraint:String {maxLength: 100, pattern: re `${PHONE_PATTERN}`}
+    # Personal phone number; "" clears it
+    @constraint:String {maxLength: 100, pattern: re `${CLEARABLE_PHONE_PATTERN}`}
     string? personalPhone = ();
-    # Resident number
-    @constraint:String {maxLength: 100, pattern: re `${PHONE_PATTERN}`}
+    # Resident number; "" clears it
+    @constraint:String {maxLength: 100, pattern: re `${CLEARABLE_PHONE_PATTERN}`}
     string? residentNumber = ();
     # Address line 1
     @constraint:String {maxLength: 255}

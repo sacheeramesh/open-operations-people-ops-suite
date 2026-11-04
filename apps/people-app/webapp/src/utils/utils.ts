@@ -16,6 +16,7 @@
 
 import { ServiceLength } from "@src/types/types";
 import { DATE_FMT, EX_EMPLOYEE_EMAIL, FUTURE_JOINER_EMAIL } from "@config/constant";
+import { stripInvisibleCharacters } from "@utils/inputRules";
 import { addDays } from "date-fns/addDays";
 import { differenceInCalendarDays } from "date-fns/differenceInCalendarDays";
 import { differenceInMonths } from "date-fns/differenceInMonths";
@@ -275,9 +276,11 @@ export const stripBom = (text: string): string =>
  * input keeps what is written consistent.
  *
  * Surrounding whitespace is dropped too, since a trailing space from a paste is invisible
- * in the field but survives into the record.
+ * in the field but survives into the record — as are zero-width characters, which the
+ * backend's email rule refuses.
  */
-export const normalizeEmail = (value: string): string => value.trim().toLowerCase();
+export const normalizeEmail = (value: string): string =>
+  stripInvisibleCharacters(value).trim().toLowerCase();
 
 /** Whether a work email is one of the shared placeholders rather than a person's own address. */
 export const isPlaceholderWorkEmail = (value: string): boolean => {

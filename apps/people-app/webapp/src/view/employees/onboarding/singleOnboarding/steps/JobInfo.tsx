@@ -59,6 +59,11 @@ import {
   normalizeEmail,
   sortAndFormatOptions,
 } from "@utils/utils";
+import {
+  EMAIL_PATTERN,
+  isValidEmail,
+  withoutInvisibleCharacters,
+} from "@utils/inputRules";
 import { ResignationReasons } from "@config/constant";
 import {
   canonicalizeReason,
@@ -140,13 +145,19 @@ export const createJobInfoValidationSchema = (
   }: { requireHouse?: boolean; requireWorkEmail?: boolean } = {},
 ) =>
   Yup.object().shape({
+    // The backend's own email pattern, so the form refuses exactly what the save would.
     workEmail: requireWorkEmail
       ? Yup.string()
+          .transform(withoutInvisibleCharacters)
           .required("Work email is required")
-          .email("Invalid email format")
+          .matches(EMAIL_PATTERN, "Invalid email format")
           .max(254, "Email must be at most 254 characters")
       : Yup.string()
-          .email("Invalid email format")
+          .transform(withoutInvisibleCharacters)
+          .matches(EMAIL_PATTERN, {
+            message: "Invalid email format",
+            excludeEmptyString: true,
+          })
           .max(254, "Email must be at most 254 characters")
           .test(
             "not-placeholder",
@@ -217,7 +228,12 @@ export const createJobInfoValidationSchema = (
       .nullable(),
     managerEmail: Yup.string().required("Lead email is required"),
     additionalManagerEmail: Yup.array()
-      .of(Yup.string().email("Invalid email format"))
+      .of(
+        Yup.string().matches(EMAIL_PATTERN, {
+          message: "Invalid email format",
+          excludeEmptyString: true,
+        }),
+      )
       .nullable(),
     finalDayInOffice: Yup.string()
       .matches(/^\d{4}-\d{2}-\d{2}$/, "Invalid date format")
@@ -530,7 +546,7 @@ export default function JobInfoStep({ isEditMode }: { isEditMode: boolean }) {
   // a ticked relocation link, so the records are loaded again as the step opens.
   useEffect(() => {
     const email = normalizeEmail(values.workEmail ?? "");
-    if (email && Yup.string().email().isValidSync(email)) {
+    if (email && isValidEmail(email)) {
       dispatch(fetchContinuousServiceRecord(email));
     }
     // Once, on open; later email edits re-fetch on blur as before.
@@ -1187,7 +1203,7 @@ export default function JobInfoStep({ isEditMode }: { isEditMode: boolean }) {
                 if (email !== (values.workEmail ?? "")) {
                   setFieldValue("workEmail", email);
                 }
-                if (email && Yup.string().email().isValidSync(email)) {
+                if (email && isValidEmail(email)) {
                   dispatch(fetchContinuousServiceRecord(email));
                 } else {
                   dispatch(resetContinuousService());
