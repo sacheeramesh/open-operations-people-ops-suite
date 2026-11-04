@@ -24,8 +24,10 @@ const SICK_NOTE_EXTENSIONS: Record<string, string> = {
   "image/png": ".png",
 };
 
-// File extension (with dot) for a sick note content type; empty when unknown.
-export const sickNoteExtension = (contentType: string): string => SICK_NOTE_EXTENSIONS[contentType] ?? "";
+// File extension (with dot) for a sick note content type; empty when unknown. Media types are
+// case-insensitive, so the lookup is too.
+export const sickNoteExtension = (contentType: string): string =>
+  SICK_NOTE_EXTENSIONS[contentType.toLowerCase()] ?? "";
 
 // Pulls `message` out of a JSON error body; falls back to the generic message.
 export const messageFromErrorText = (text: string): string => {
