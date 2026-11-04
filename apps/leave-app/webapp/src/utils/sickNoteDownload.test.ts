@@ -36,6 +36,8 @@ describe("sickNoteExtension", () => {
   it("returns empty for unknown types", () => {
     expect(sickNoteExtension("text/plain")).toBe("");
     expect(sickNoteExtension("")).toBe("");
+    expect(sickNoteExtension("constructor")).toBe("");
+    expect(sickNoteExtension("__proto__")).toBe("");
   });
 });
 

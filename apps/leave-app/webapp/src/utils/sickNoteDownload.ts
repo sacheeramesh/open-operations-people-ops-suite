@@ -25,9 +25,12 @@ const SICK_NOTE_EXTENSIONS: Record<string, string> = {
 };
 
 // File extension (with dot) for a sick note content type; empty when unknown. Media types are
-// case-insensitive, so the lookup is too.
-export const sickNoteExtension = (contentType: string): string =>
-  SICK_NOTE_EXTENSIONS[contentType.toLowerCase()] ?? "";
+// case-insensitive, so the lookup is too, and only the map's own keys count, never inherited ones
+// such as "constructor".
+export const sickNoteExtension = (contentType: string): string => {
+  const key = contentType.toLowerCase();
+  return Object.hasOwn(SICK_NOTE_EXTENSIONS, key) ? SICK_NOTE_EXTENSIONS[key] : "";
+};
 
 // Pulls `message` out of a JSON error body; falls back to the generic message.
 export const messageFromErrorText = (text: string): string => {
