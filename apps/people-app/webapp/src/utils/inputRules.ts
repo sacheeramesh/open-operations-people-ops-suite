@@ -39,7 +39,7 @@ export const PHONE_PATTERN = /^[0-9+\-()\s]*[0-9][0-9+\-()\s]*$/;
  * zero-width non-joiner and joiner, word joiner, and the zero-width no-break space (U+FEFF,
  * which is also the byte order mark).
  */
-const INVISIBLE_CHARACTERS = /[​-‍⁠﻿]/g;
+const INVISIBLE_CHARACTERS = /[\u200B-\u200D\u2060\uFEFF]/g;
 
 /** Removes characters that are invisible in a field but would still be stored. */
 export const stripInvisibleCharacters = (value: string): string =>

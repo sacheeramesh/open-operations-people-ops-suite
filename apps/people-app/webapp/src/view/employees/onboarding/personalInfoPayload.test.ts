@@ -61,9 +61,9 @@ describe("toPersonalUpdatePayload", () => {
   it("removes invisible characters from phone numbers and the email", () => {
     const payload = toPersonalUpdatePayload(
       withPersonal({
-        personalEmail: "﻿john@gmail.com",
-        personalPhone: "077​1234567",
-        residentNumber: "011﻿2345678",
+        personalEmail: "\uFEFFjohn@gmail.com",
+        personalPhone: "077\u200B1234567",
+        residentNumber: "011\uFEFF2345678",
       }),
     );
 
@@ -90,10 +90,10 @@ describe("personalInfoValidationSchema", () => {
     );
 
   it("accepts a pasted number carrying an invisible character, since it is cleaned before sending", async () => {
-    await expect(check("residentNumber", "011﻿2345678")).resolves.toBe(
+    await expect(check("residentNumber", "011\uFEFF2345678")).resolves.toBe(
       "0112345678",
     );
-    await expect(check("personalPhone", "077​1234567")).resolves.toBe(
+    await expect(check("personalPhone", "077\u200B1234567")).resolves.toBe(
       "0771234567",
     );
   });

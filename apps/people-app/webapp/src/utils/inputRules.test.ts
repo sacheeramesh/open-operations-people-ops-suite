@@ -25,11 +25,11 @@ import {
 
 describe("stripInvisibleCharacters", () => {
   it("removes the zero-width characters a paste can carry along", () => {
-    expect(stripInvisibleCharacters("﻿011 234 5678")).toBe("011 234 5678");
-    expect(stripInvisibleCharacters("011​234‌5678‍")).toBe(
+    expect(stripInvisibleCharacters("\uFEFF011 234 5678")).toBe("011 234 5678");
+    expect(stripInvisibleCharacters("011\u200B234\u200C5678\u200D")).toBe(
       "0112345678",
     );
-    expect(stripInvisibleCharacters("011⁠2345678")).toBe("0112345678");
+    expect(stripInvisibleCharacters("011\u20602345678")).toBe("0112345678");
   });
 
   it("keeps ordinary and non-breaking spaces, which the backend accepts", () => {
@@ -41,7 +41,7 @@ describe("stripInvisibleCharacters", () => {
 
 describe("withoutInvisibleCharacters", () => {
   it("cleans strings and passes anything else through untouched", () => {
-    expect(withoutInvisibleCharacters("﻿0112345678")).toBe("0112345678");
+    expect(withoutInvisibleCharacters("\uFEFF0112345678")).toBe("0112345678");
     expect(withoutInvisibleCharacters(null)).toBeNull();
     expect(withoutInvisibleCharacters(undefined)).toBeUndefined();
   });
@@ -63,7 +63,7 @@ describe("PHONE_PATTERN", () => {
   // The backend does not treat U+FEFF as a space but the browser's \s does, so a number
   // carrying one must be cleaned before it is checked and before it is sent.
   it("passes a number carrying U+FEFF only once it is cleaned", () => {
-    const pasted = "011﻿2345678";
+    const pasted = "011\uFEFF2345678";
     expect(PHONE_PATTERN.test(stripInvisibleCharacters(pasted))).toBe(true);
   });
 });
@@ -86,7 +86,7 @@ describe("isValidEmail", () => {
       "john#1@gmail.com",
       "john&jane@gmail.com",
       "john@gmäil.com",
-      "﻿john@gmail.com",
+      "\uFEFFjohn@gmail.com",
     ]) {
       expect(isValidEmail(value)).toBe(false);
     }
@@ -119,7 +119,7 @@ describe("toSearchString", () => {
   });
 
   it("removes invisible characters", () => {
-    expect(toSearchString("﻿john​")).toBe("john");
+    expect(toSearchString("\uFEFFjohn\u200B")).toBe("john");
   });
 
   it("caps the search at the backend's 100 characters", () => {
