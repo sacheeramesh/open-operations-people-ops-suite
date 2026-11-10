@@ -95,6 +95,6 @@ export const withSafeSearchString = <T extends { searchString?: string }>(
   const searchString = toSearchString(request.searchString);
   return {
     ...request,
-    searchString: searchString.trim().length > 0 ? searchString : undefined,
+    searchString: searchString.trim() ? searchString : undefined,
   };
 };
