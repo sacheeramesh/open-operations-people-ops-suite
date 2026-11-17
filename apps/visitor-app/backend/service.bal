@@ -955,7 +955,22 @@ service http:InterceptableService / on new http:Listener(9090) {
                 };
             }
 
-            if visitorEmail is string {
+            // The rejection email goes to the host and to whoever created the visit (once, if they are the
+            // same person), with reception in CC. The visitor is not emailed.
+            string[] recipients = [];
+            string? hostEmail = visit.whomTheyMeet;
+            if hostEmail is string && hostEmail.trim() != "" {
+                recipients.push(hostEmail);
+            }
+            string creatorEmail = visit.createdBy;
+            string hostKey = hostEmail is string ? hostEmail.toLowerAscii() : "";
+            if creatorEmail.trim() != "" && creatorEmail.toLowerAscii() != hostKey {
+                recipients.push(creatorEmail);
+            }
+
+            if recipients.length() == 0 {
+                log:printWarn(string `Visit ${visitId} has no host or creator email; rejection email not sent.`);
+            } else {
                 string? timeOfEntry = visit.timeOfEntry;
                 string|error formattedFromDate = "N/A";
                 if timeOfEntry is string {
@@ -976,12 +991,15 @@ service http:InterceptableService / on new http:Listener(9090) {
                     }
                 }
                 string? lastName = visit.lastName;
-                string|error content = email:bindKeyValues(email:visitorRejectingTemplate,
+                string? companyName = visit.companyName;
+                string rejectionReason = payload.rejectionReason ?: "";
+                string|error content = email:bindKeyValues(email:hostVisitRejectionTemplate,
                         {
-                            TIME: time:utcToEmailString(time:utcNow()),
-                            EMAIL: visitorEmail,
-                            FIRST_NAME: visit.firstName,
-                            NAME: visit.firstName + (lastName is string ? string ` ${lastName}` : ""),
+                            NAME: escapeHtml(visit.firstName + (lastName is string ? string ` ${lastName}` : "")),
+                            COMPANY_NAME: companyName is string && companyName.trim() != "" ?
+                                escapeHtml(companyName) : "N/A",
+                            REJECTED_BY: escapeHtml(invokerInfo.email),
+                            REJECTION_REASON: escapeHtml(rejectionReason),
                             TIME_OF_ENTRY: timeOfEntry is string && formattedFromDate is string ? string `<li>
                                 <p
                                   style="
@@ -1015,18 +1033,13 @@ service http:InterceptableService / on new http:Listener(9090) {
                     string customError = "An error occurred while binding values to the email template!";
                     log:printError(customError, content);
                 } else {
-                    string? hostEmail = visit.whomTheyMeet;
-                    string[] ccList = [email:receptionEmail];
-                    if hostEmail is string {
-                        ccList.push(hostEmail);
-                    }
                     error? emailError = email:sendEmail(
                                 {
-                                to: [visitorEmail],
+                                to: recipients,
                                 'from: email:fromEmailAddress,
                                 subject: email:VISIT_REJECTED_SUBJECT,
                                 template: content,
-                                cc: ccList
+                                cc: [email:receptionEmail]
                             });
                     if emailError is error {
                         string customError = "An error occurred while sending the rejection email!";
