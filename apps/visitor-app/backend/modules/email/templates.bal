@@ -4177,7 +4177,7 @@ public final string visitorApproveTemplate = string `
 </html>
 `;
 
-public final string visitorRejectingTemplate = string `
+public final string hostVisitRejectionTemplate = string `
 <!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
   <head>
@@ -5077,8 +5077,7 @@ public final string visitorRejectingTemplate = string `
                                 margin-top: 0;
                               "
                             >
-                              Dear
-                              <!-- [FIRST_NAME] -->,
+                              Hello,
                             </p>
                             <p
                               style="
@@ -5094,8 +5093,9 @@ public final string visitorRejectingTemplate = string `
                                 text-align: justify;
                               "
                             >
-                              We regret to inform you that your visit request to
-                              WSO2 has not been approved at this time.
+                              The visit request below has been rejected. You are
+                              receiving this email because you are the host of
+                              this visit or created the request.
                             </p>
 
                             <p
@@ -5112,11 +5112,9 @@ public final string visitorRejectingTemplate = string `
                                 text-align: justify;
                               "
                             >
-                              This decision may be due to scheduling conflicts,
-                              access limitations, or other internal
-                              considerations. You may contact your host directly
-                              for clarification or to reschedule your visit if
-                              necessary.
+                              The visitor has not been notified. Please let them
+                              know, and submit a new visit request if the visit
+                              should still go ahead.
                             </p>
 
                             <p
@@ -5157,8 +5155,50 @@ public final string visitorRejectingTemplate = string `
                                   <span><!-- [NAME] --></span>
                                 </p>
                               </li>
+                              <li>
+                                <p
+                                  style="
+                                    font-family:
+                                      &quot;Roboto&quot;, Helvetica, sans-serif;
+                                    font-size: 17px;
+                                    color: #465868;
+                                    text-align: left;
+                                  "
+                                >
+                                  <strong>Company:</strong>
+                                  <span><!-- [COMPANY_NAME] --></span>
+                                </p>
+                              </li>
                               <!-- [TIME_OF_ENTRY] -->
                               <!-- [TIME_OF_DEPARTURE] -->
+                              <li>
+                                <p
+                                  style="
+                                    font-family:
+                                      &quot;Roboto&quot;, Helvetica, sans-serif;
+                                    font-size: 17px;
+                                    color: #465868;
+                                    text-align: left;
+                                  "
+                                >
+                                  <strong>Rejected by:</strong>
+                                  <span><!-- [REJECTED_BY] --></span>
+                                </p>
+                              </li>
+                              <li>
+                                <p
+                                  style="
+                                    font-family:
+                                      &quot;Roboto&quot;, Helvetica, sans-serif;
+                                    font-size: 17px;
+                                    color: #465868;
+                                    text-align: left;
+                                  "
+                                >
+                                  <strong>Reason:</strong>
+                                  <span><!-- [REJECTION_REASON] --></span>
+                                </p>
+                              </li>
                             </ul>
 
                             <p
@@ -5178,23 +5218,6 @@ public final string visitorRejectingTemplate = string `
                               If you require any further assistance, please do
                               not hesitate to contact us at
                               <!-- [CONTACT_EMAIL] -->.
-                            </p>
-
-                            <p
-                              style="
-                                font-family:
-                                  &quot;Roboto&quot;, Helvetica, sans-serif;
-                                font-size: 17px;
-                                line-height: 28px;
-                                padding-top: 0;
-                                padding-left: 0;
-                                padding-right: 0;
-                                padding-right: 0;
-                                color: #465868;
-                                text-align: left;
-                              "
-                            >
-                              Thank you for your cooperation.
                             </p>
 
                             <p
