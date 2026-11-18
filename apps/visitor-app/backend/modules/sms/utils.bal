@@ -20,7 +20,7 @@
 # + date - The date of the visit
 # + return - The generated message string
 public isolated function generateMessage(int verificationCode, string date) returns string {
-    return string `You are invited to visit WSO2
+    return string `You are invited to visit Choreo Labs
 Date: ${date}
 Verification Code: ${verificationCode}
 Please present this at the security desk.`;

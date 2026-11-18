@@ -19,11 +19,24 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <!-- The Choreo Labs mark, white for dark tab strips and navy for light ones. The dark one is
+         declared first: a browser that ignores media on icon links takes the last, and navy is the
+         safer default. -->
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="%PUBLIC_URL%/favicon-mark-white.svg"
+      media="(prefers-color-scheme: dark)"
+    />
+    <link
+      rel="icon"
+      type="image/svg+xml"
+      href="%PUBLIC_URL%/favicon-mark-navy.svg"
+      media="(prefers-color-scheme: light)"
+    />
     <meta name="viewport" content="width=device-width, initial-scale=0.7" />
     <meta name="theme-color" content="#000000" />
-    <meta name="Visitor" content="Visitor App for WSO2 Internal App" />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/wso2-logo-white.svg" />
+    <meta name="Visitor" content="Visitor App for Choreo Labs Internal App" />
     <!--
       manifest.json provides metadata used when your web app is installed on a
       user's mobile device or desktop. See https://developers.google.com/web/fundamentals/web-app-manifest/

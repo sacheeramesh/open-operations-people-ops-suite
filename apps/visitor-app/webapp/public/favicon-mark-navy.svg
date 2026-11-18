@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- One App favicon: the Choreo Labs mark in Midnight Ink, for light tab strips. The viewBox is
+     the mark's own bounds widened to a square, so it sits centred in the slot. -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="-21.225 0 887.42 887.42">
+  <g fill="#0B1633">
+    <ellipse cx="710.09" cy="282.87" rx="134.88" ry="60.8"/>
+    <ellipse cx="629.81" cy="135.53" rx="129.85" ry="51.34"/>
+    <ellipse cx="470.02" cy="24.5" rx="141.63" ry="24.5"/>
+    <ellipse cx="710.09" cy="604.55" rx="134.88" ry="60.8"/>
+    <ellipse cx="629.81" cy="751.87" rx="129.85" ry="51.34"/>
+    <ellipse cx="470.02" cy="862.91" rx="141.63" ry="24.5"/>
+    <ellipse cx="134.88" cy="430.4" rx="134.88" ry="60.8"/>
+    <ellipse cx="181.78" cy="607.8" rx="110.13" ry="51.34"/>
+    <ellipse cx="181.78" cy="252.45" rx="110.13" ry="51.34"/>
+  </g>
+</svg>

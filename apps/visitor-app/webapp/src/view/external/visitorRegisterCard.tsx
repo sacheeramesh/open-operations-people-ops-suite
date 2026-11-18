@@ -429,7 +429,7 @@ function VisitorRegisterCard() {
                   color: "#FF7300",
                 }}
               >
-                WSO2 Visitor Registration
+                Choreo Labs Visitor Registration
               </Typography>
 
               <Typography

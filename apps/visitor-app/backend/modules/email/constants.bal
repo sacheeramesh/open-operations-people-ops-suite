@@ -13,8 +13,8 @@
 // KIND, either express or implied.  See the License for the
 // specific language governing permissions and limitations
 // under the License. 
-public const VISIT_INVITATION_SUBJECT = "Invitation to Visit the WSO2 Office";
-public const VISIT_ACCEPTED_SUBJECT = "WSO2 Visitor Access Confirmation";
-public const VISIT_REJECTED_SUBJECT = "WSO2 Visitor Access Rejection";
-public const VISIT_COMPLETION_SUBJECT = "WSO2 Visit Completion";
-public const EMPLOYEE_VISITOR_ARRIVAL_SUBJECT = "Your Visitor Has Arrived - WSO2";
+public const VISIT_INVITATION_SUBJECT = "Invitation to Visit the Choreo Labs Office";
+public const VISIT_ACCEPTED_SUBJECT = "Choreo Labs Visitor Access Confirmation";
+public const VISIT_REJECTED_SUBJECT = "Choreo Labs Visitor Access Rejection";
+public const VISIT_COMPLETION_SUBJECT = "Choreo Labs Visit Completion";
+public const EMPLOYEE_VISITOR_ARRIVAL_SUBJECT = "Your Visitor Has Arrived - Choreo Labs";

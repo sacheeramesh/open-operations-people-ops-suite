@@ -491,7 +491,7 @@ modules = [
 [[package]]
 org = "wso2"
 name = "visitor"
-version = "2.0.1"
+version = "2.0.2"
 dependencies = [
 	{org = "ballerina", name = "cache"},
 	{org = "ballerina", name = "constraint"},

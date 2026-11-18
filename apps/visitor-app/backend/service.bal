@@ -86,7 +86,7 @@ service http:InterceptableService / on new http:Listener(9090) {
             // Shared reception accounts are authorized via roles but are not real employees,
             // so bypass fetching employee details and return with basic user info.
             user = {
-                firstName: "WSO2",
+                firstName: "Choreo Labs",
                 lastName: "Reception",
                 workEmail: userInfo.email,
                 jobRole: "Reception",

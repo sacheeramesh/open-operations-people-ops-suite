@@ -1,22 +1,22 @@
-# **<p align="center"><font color="#FF7300">WSO2</font> Visitor App User Guide</p>**
+# **<p align="center"><font color="#FF7300">Choreo Labs</font> Visitor App User Guide</p>**
 
 <br>
 
 ## **Objective**
 
-To enhance visitor management at WSO2 premises by centralizing visit scheduling, invitations, approvals, and tracking within a single application.
+To enhance visitor management at Choreo Labs premises by centralizing visit scheduling, invitations, approvals, and tracking within a single application.
 
-The **WSO2 Visitor App** ensures secure access control, smooth coordination between hosts and visitors, and improved administrative oversight. Using the app, hosts can create visits or send invitations, while admins can approve, reject, and track visits efficiently.
+The **Choreo Labs Visitor App** ensures secure access control, smooth coordination between hosts and visitors, and improved administrative oversight. Using the app, hosts can create visits or send invitations, while admins can approve, reject, and track visits efficiently.
 
 <br>
 
-## **WSO2 Visitor App Overview**
+## **Choreo Labs Visitor App Overview**
 
-The **WSO2 Visitor App** is a application under the **WSO2 People Ops Suite** (an open-source project) developed by the WSO2 Internal Apps Team. It addresses visitor management requirements by enabling direct visit creation, invitation sending, approval workflows, and visit history tracking.
+The **Choreo Labs Visitor App** is a application under the **Choreo Labs People Ops Suite** (an open-source project) developed by the Choreo Labs Internal Apps Team. It addresses visitor management requirements by enabling direct visit creation, invitation sending, approval workflows, and visit history tracking.
 
 ![App Interface](doc/00.png)
 
-<p align="center"><em>Example: WSO2 Visitor App Interface</em></p>
+<p align="center"><em>Example: Choreo Labs Visitor App Interface</em></p>
 
 <br>
 
@@ -90,7 +90,7 @@ Admins can manage pending visits from the **Admin Panel** tab.
 
 ## **Visitor Invitation (Self-Registration)**
 
-Visitors can use the public-facing **WSO2 Visitor Registration Portal** to register themselves.
+Visitors can use the public-facing **Choreo Labs Visitor Registration Portal** to register themselves.
 
 1. Enter **Visitor Information** (name, company, purpose of visit).
 2. Specify the **Scheduled Date** and **Time of Entry**.
@@ -100,7 +100,7 @@ Visitors can use the public-facing **WSO2 Visitor Registration Portal** to regis
 
 <p align="center"><em>Example: Visitor Self-Registration Form</em></p>
 
-4. Click **Submit Visitor**. This creates a pending visit for approval by the WSO2 admin team.
+4. Click **Submit Visitor**. This creates a pending visit for approval by the Choreo Labs admin team.
    <br>
    (This invitation will remain active until the user registers all the visitors defined in the invitation.)
 
@@ -114,4 +114,4 @@ For any inquiries or support needs, please contact the **Internal Apps Team** at
 ---
 
 **Last Updated:** October 2025  
-**Maintained by:** WSO2 Internal Apps Team
+**Maintained by:** Choreo Labs Internal Apps Team

@@ -29,10 +29,19 @@ import {
   Stack,
   Tooltip,
 } from "@mui/material";
-import { useTheme } from "@mui/material/styles";
+import "@fontsource-variable/sora";
+import ChoreoLabsMark from "@component/common/ChoreoLabsMark";
+
+// Brand lockup: the Choreo Labs mark, then the app name in Sora 600. Sized like the Choreo Labs
+// Customer Portal header (24px mark, 20px gap, 16px name). vertical-align centres the mark on the
+// cap height of the first letter.
+const BRAND_FONT_FAMILY = "'Sora Variable', sans-serif";
+const BRAND_FONT_PX = 16;
+const BRAND_MARK_PX = 24;
+const BRAND_GAP_PX = "20px";
+const BRAND_MARK_ALIGN = `calc(0.5cap - ${BRAND_MARK_PX / 2}px)`;
 
 const Header = () => {
-  const theme = useTheme();
   const authContext = useAppAuthContext();
   const [anchorElUser, setAnchorElUser] = React.useState<null | HTMLElement>(
     null,
@@ -73,30 +82,34 @@ const Header = () => {
           },
         }}
       >
-        <img
-          alt="wso2"
-          style={{
-            height: "40px",
-            maxWidth: "100px",
-            padding: "3px",
-          }}
-          onClick={() => (window.location.href = "/")}
-          src={
-            theme.palette.mode === "light"
-              ? require("@assets/images/wso2-logo-black.svg").default
-              : require("@assets/images/wso2-logo-white.svg").default
-          }
-        />
-        <Typography
-          variant="h5"
-          sx={{
-            ml: 1,
-            flexGrow: 1,
-            fontWeight: 600,
-          }}
-        >
-          {APP_NAME}
-        </Typography>
+        <Box sx={{ flexGrow: 1, ml: 1.5 }}>
+          {/* One line of text with the mark inline at its start, so BRAND_MARK_ALIGN can centre the
+              mark on the cap height. lineHeight 0 makes the line box the mark's box, which the
+              toolbar then centres. The mark takes the header's text colour. */}
+          <Typography
+            component="span"
+            onClick={() => (window.location.href = "/")}
+            sx={{
+              display: "inline-block",
+              cursor: "pointer",
+              whiteSpace: "nowrap",
+              fontFamily: BRAND_FONT_FAMILY,
+              fontWeight: 600,
+              fontSize: BRAND_FONT_PX,
+              lineHeight: 0,
+            }}
+          >
+            <Box
+              component={ChoreoLabsMark}
+              sx={{
+                height: BRAND_MARK_PX,
+                mr: BRAND_GAP_PX,
+                verticalAlign: BRAND_MARK_ALIGN,
+              }}
+            />
+            {APP_NAME}
+          </Typography>
+        </Box>
 
         <Box sx={{ flexGrow: 0 }}>
           {user.userInfo && (

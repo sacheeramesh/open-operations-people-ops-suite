@@ -245,7 +245,7 @@ const Sidebar = (props: SidebarProps) => {
             }}
           >
             {props.open
-              ? `v ${pJson.version} | © ${new Date().getFullYear()} WSO2 LLC`
+              ? `v ${pJson.version} | © ${new Date().getFullYear()} Choreo Labs LLC`
               : `v${pJson.version}`}
           </Typography>
         </Drawer>
