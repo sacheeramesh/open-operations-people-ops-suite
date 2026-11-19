@@ -166,7 +166,7 @@ ${items}
 # + value - Row value
 # + return - The row as HTML
 isolated function detailItem(string label, string value) returns string =>
-    string `<li><p style="margin:0 0 8px; ${FONT} font-size:15px; line-height:24px; color:#3F465C;"><strong style="color:#050A1C; font-weight:600;">${label}</strong> <span>${value}</span></p></li>
+    string `<li><p style="margin:0 0 8px; ${FONT} font-size:15px; line-height:24px; color:#3F465C; overflow-wrap:anywhere; word-break:break-word;"><strong style="color:#050A1C; font-weight:600;">${label}</strong> <span>${value}</span></p></li>
 `;
 
 # The visit's QR code, attached to the email as an inline image.
@@ -232,17 +232,20 @@ isolated function emailLayout(string title, string heading, string body) returns
   .foot-link { transition: color .2s ease; }
   .foot-link:hover { color: #D2461B !important; }
 
-  /* Visit details: the rows the service fills in carry their own inline styles. */
+  /* Visit details: the rows the service fills in carry their own inline styles. Long unbroken
+     values (a pasted link or ID) wrap instead of widening the email. */
   ul.details li { color: #EB5628; }
   ul.details li p {
     margin: 0 0 8px !important; font-family: 'Sora', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif !important;
     font-size: 15px !important; line-height: 24px !important; color: #3F465C !important;
+    overflow-wrap: anywhere; word-break: break-word;
   }
   ul.details strong { color: #050A1C; font-weight: 600; }
   ul.details ul {
     margin: 0 0 8px !important; padding-left: 0 !important; list-style: none;
     font-family: 'Sora', system-ui, -apple-system, 'Segoe UI', Arial, sans-serif !important;
     font-size: 15px !important; line-height: 24px !important; color: #3F465C !important;
+    overflow-wrap: anywhere; word-break: break-word;
   }
 
   @media only screen and (max-width: 620px) {

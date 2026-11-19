@@ -86,11 +86,12 @@ isolated function paragraph(string content) returns string =>
     string `<p class="dm-text" style="margin:0 0 16px; ${FONT} font-size:16px; line-height:27px; color:#3F465C; mso-line-height-rule:exactly;">${content}</p>
 `;
 
-# A bordered table listing the details of a visit.
+# A bordered table listing the details of a visit. It is a data table, not a layout table, so it keeps
+# its table semantics and each row's label is a row header for screen readers.
 #
 # + rows - The table rows
 # + return - The table as HTML
-isolated function detailsTable(string rows) returns string => string `<table role="presentation" width="100%" border="0" cellpadding="0" cellspacing="0" class="dm-border" style="margin:8px 0 0; border:1px solid #E6E8ED; border-collapse:separate; border-radius:12px; overflow:hidden;">
+isolated function detailsTable(string rows) returns string => string `<table width="100%" border="0" cellpadding="0" cellspacing="0" class="dm-border" style="margin:8px 0 0; border:1px solid #E6E8ED; border-collapse:separate; border-radius:12px; overflow:hidden;">
 ${rows}
 </table>
 `;
@@ -105,8 +106,8 @@ isolated function detailRow(string label, string value, boolean shaded) returns 
     string background = shaded ? "#F4F6FA" : "#FFFFFF";
     string rowClass = shaded ? "dm-panel" : "dm-card";
     return string `<tr>
-  <td class="${rowClass} dm-head" bgcolor="${background}" style="background-color:${background}; width:40%; padding:12px 16px; ${FONT} font-size:14px; line-height:20px; font-weight:600; color:#050A1C; mso-line-height-rule:exactly;">${label}</td>
-  <td class="${rowClass} dm-text" bgcolor="${background}" style="background-color:${background}; padding:12px 16px; ${FONT} font-size:14px; line-height:20px; color:#3F465C; mso-line-height-rule:exactly;">${value}</td>
+  <th scope="row" class="${rowClass} dm-head" bgcolor="${background}" style="background-color:${background}; width:40%; padding:12px 16px; ${FONT} font-size:14px; line-height:20px; font-weight:600; color:#050A1C; text-align:left; vertical-align:top; mso-line-height-rule:exactly;">${label}</th>
+  <td class="${rowClass} dm-text" bgcolor="${background}" style="background-color:${background}; padding:12px 16px; ${FONT} font-size:14px; line-height:20px; color:#3F465C; overflow-wrap:anywhere; word-break:break-word; mso-line-height-rule:exactly;">${value}</td>
 </tr>
 `;
 }
@@ -134,7 +135,7 @@ isolated function emailLayout(string body) returns string => string `<!DOCTYPE h
 <!--[if mso]>
 <noscript><xml><o:OfficeDocumentSettings><o:AllowPNG/><o:PixelsPerInch>96</o:PixelsPerInch></o:OfficeDocumentSettings></xml></noscript>
 <style type="text/css">
-  body, table, td, div, p, a, span, h1 { font-family: 'Segoe UI', Arial, sans-serif !important; mso-line-height-rule: exactly; }
+  body, table, th, td, div, p, a, span, h1 { font-family: 'Segoe UI', Arial, sans-serif !important; mso-line-height-rule: exactly; }
   a { text-decoration: none; }
 </style>
 <![endif]-->
